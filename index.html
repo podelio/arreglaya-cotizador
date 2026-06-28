@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ArreglaYa">
+<meta name="theme-color" content="#E8650A">
+<meta name="description" content="Cotizador rápido de servicios ArreglaYa para generar partidas y enviarlas por WhatsApp.">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<title>ArreglaYa · Cotizador</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --orange: #E8650A;
+    --orange-light: #FFF0E8;
+    --orange-dark: #C4520A;
+    --text: #1A1A1A;
+    --text-2: #6B6B6B;
+    --text-3: #9E9E9E;
+    --bg: #F5F4F2;
+    --surface: #FFFFFF;
+    --border: #E8E6E2;
+    --border-strong: #D0CEC9;
+    --green: #1A8C4E;
+    --green-bg: #E8F5EE;
+    --red: #C0392B;
+    --red-bg: #FDEAEA;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); }
+
+  /* ---- LAYOUT ---- */
+  #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+  #header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 16px 10px; flex-shrink: 0; }
+  #main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: calc(72px + var(--safe-bottom)); }
+  #footer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 10px 16px calc(10px + var(--safe-bottom)); flex-shrink: 0; display: none; }
+
+  /* ---- HEADER ---- */
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .logo { display: flex; align-items: center; gap: 8px; }
+  .logo-mark { width: 32px; height: 32px; background: var(--orange); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .logo-mark svg { width: 18px; height: 18px; fill: white; }
+  .logo-name { font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+  .logo-name span { color: var(--orange); }
+  .header-actions { display: flex; gap: 8px; }
+  .btn-icon { width: 34px; height: 34px; border-radius: 50%; background: var(--bg); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .btn-icon svg { width: 18px; height: 18px; stroke: var(--text-2); }
+  .nivel-selector { display: flex; gap: 4px; }
+  .nivel-btn { flex: 1; padding: 6px 0; border: 1px solid var(--border); background: var(--bg); border-radius: var(--radius-sm); font-size: 12px; font-weight: 500; color: var(--text-2); cursor: pointer; text-align: center; transition: all 0.15s; }
+  .nivel-btn.active { background: var(--orange); border-color: var(--orange); color: white; }
+
+  /* ---- SEARCH ---- */
+  .search-wrap { position: relative; padding: 12px 16px 0; }
+  .search-input-wrap { position: relative; }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; stroke: var(--text-3); pointer-events: none; }
+  #search-input { width: 100%; padding: 11px 40px 11px 38px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 16px; background: var(--surface); color: var(--text); outline: none; -webkit-appearance: none; }
+  #search-input:focus { border-color: var(--orange); }
+  #search-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; border-radius: 50%; background: var(--text-3); border: none; cursor: pointer; display: none; align-items: center; justify-content: center; }
+  #search-clear svg { width: 12px; height: 12px; stroke: white; stroke-width: 2.5; }
+  #search-input:not(:placeholder-shown) ~ #search-clear { display: flex; }
+
+  /* ---- CATEGORY CHIPS ---- */
+  .cats-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 10px 16px 0; }
+  .cats-wrap::-webkit-scrollbar { display: none; }
+  .cats-inner { display: flex; gap: 6px; width: max-content; }
+  .cat-chip { padding: 6px 12px; border: 1px solid var(--border); border-radius: 20px; font-size: 13px; font-weight: 500; color: var(--text-2); background: var(--surface); cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+  .cat-chip.active { background: var(--orange-light); border-color: var(--orange); color: var(--orange); }
+
+  /* ---- RESULTS LIST ---- */
+  #results-section { padding: 10px 16px 0; }
+  .section-label { font-size: 12px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .service-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; transition: border-color 0.15s, box-shadow 0.15s; -webkit-user-select: none; user-select: none; }
+  .service-card:active { border-color: var(--orange); box-shadow: 0 0 0 3px var(--orange-light); }
+  .sc-info { flex: 1; min-width: 0; }
+  .sc-name { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 2px; line-height: 1.3; }
+  .sc-meta { font-size: 12px; color: var(--text-3); }
+  .sc-price { text-align: right; flex-shrink: 0; }
+  .sc-price-num { font-size: 15px; font-weight: 700; color: var(--orange); }
+  .sc-price-unit { font-size: 11px; color: var(--text-3); }
+  .sc-add-btn { width: 30px; height: 30px; border-radius: 50%; background: var(--orange); border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .sc-add-btn svg { width: 16px; height: 16px; stroke: white; stroke-width: 2.5; }
+
+  /* ---- EMPTY / HINT STATES ---- */
+  .hint-box { padding: 24px 16px; text-align: center; }
+  .hint-icon { font-size: 36px; margin-bottom: 10px; }
+  .hint-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .hint-sub { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+
+  /* ---- MANUAL SECTION ---- */
+  .manual-toggle { margin: 10px 16px 0; }
+  .manual-toggle-btn { width: 100%; padding: 10px; background: var(--surface); border: 1px dashed var(--border-strong); border-radius: var(--radius); font-size: 13px; color: var(--text-2); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .manual-toggle-btn svg { width: 16px; height: 16px; stroke: var(--text-2); }
+  #manual-form { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin: 8px 16px 0; padding: 14px; }
+  #manual-form.open { display: block; }
+  .form-row { margin-bottom: 10px; }
+  .form-row label { font-size: 12px; font-weight: 600; color: var(--text-2); display: block; margin-bottom: 4px; }
+  .form-row input, .form-row select { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 15px; color: var(--text); background: var(--bg); -webkit-appearance: none; outline: none; }
+  .form-row input:focus, .form-row select:focus { border-color: var(--orange); background: var(--surface); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .btn-submit { width: 100%; padding: 11px; background: var(--orange); border: none; border-radius: var(--radius-sm); color: white; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 4px; }
+  .btn-submit:active { background: var(--orange-dark); }
+
+  /* ---- COTIZACIÓN VIEW ---- */
+  #view-cot { display: none; }
+  .cot-header { padding: 14px 16px 0; }
+  .cot-header-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .cot-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px; }
+  .cot-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; color: var(--text); background: var(--surface); -webkit-appearance: none; outline: none; }
+  .cot-input:focus { border-color: var(--orange); }
+  .cot-section-label { font-size: 12px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; padding: 0 16px; margin-bottom: 8px; }
+  .cot-item { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: flex-start; gap: 10px; }
+  .cot-item-info { flex: 1; min-width: 0; }
+  .cot-item-name { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.3; margin-bottom: 2px; }
+  .cot-item-detail { font-size: 12px; color: var(--text-3); }
+  .cot-item-right { text-align: right; flex-shrink: 0; }
+  .cot-item-subtotal { font-size: 14px; font-weight: 700; color: var(--text); }
+  .cot-item-del { width: 26px; height: 26px; border-radius: 50%; background: var(--red-bg); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+  .cot-item-del svg { width: 13px; height: 13px; stroke: var(--red); stroke-width: 2.5; }
+  .cot-totals { background: var(--surface); padding: 14px 16px; margin: 0; border-top: 2px solid var(--border); }
+  .tot-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-2); margin-bottom: 4px; }
+  .tot-row.big { font-size: 17px; font-weight: 700; color: var(--text); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); margin-bottom: 0; }
+  .cot-empty { padding: 32px 16px; text-align: center; color: var(--text-3); font-size: 14px; }
+
+  /* ---- BOTTOM BAR ---- */
+  .footer-inner { display: flex; align-items: center; gap: 10px; }
+  .footer-summary { flex: 1; }
+  .footer-items { font-size: 12px; color: var(--text-2); }
+  .footer-total { font-size: 18px; font-weight: 700; color: var(--text); }
+  .btn-wa { display: flex; align-items: center; gap: 8px; padding: 12px 20px; background: #25D366; border: none; border-radius: var(--radius); color: white; font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .btn-wa svg { width: 20px; height: 20px; fill: white; }
+  .btn-wa:active { background: #1da851; }
+
+  /* ---- TAB BAR ---- */
+  .tab-bar { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .tab-btn { flex: 1; padding: 10px 0; background: none; border: none; border-bottom: 2px solid transparent; font-size: 13px; font-weight: 500; color: var(--text-2); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; transition: all 0.15s; }
+  .tab-btn svg { width: 20px; height: 20px; stroke: var(--text-2); }
+  .tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); }
+  .tab-btn.active svg { stroke: var(--orange); }
+  .tab-badge { background: var(--orange); color: white; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 10px; min-width: 16px; text-align: center; }
+  .tab-btn:not(.active) .tab-badge { background: var(--text-3); }
+
+  /* ---- MODAL ---- */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal-sheet { background: var(--surface); border-radius: 20px 20px 0 0; padding: 20px 20px calc(20px + var(--safe-bottom)); width: 100%; transform: translateY(100%); transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); }
+  .modal-overlay.open .modal-sheet { transform: translateY(0); }
+  .modal-handle { width: 36px; height: 4px; background: var(--border-strong); border-radius: 2px; margin: 0 auto 16px; }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .modal-service-name { font-size: 13px; color: var(--text-2); margin-bottom: 16px; line-height: 1.4; }
+  .modal-price-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; background: var(--bg); border-radius: var(--radius-sm); padding: 10px 14px; }
+  .modal-price-label { font-size: 13px; color: var(--text-2); }
+  .modal-price-val { font-size: 20px; font-weight: 700; color: var(--orange); }
+  .modal-price-unit { font-size: 12px; color: var(--text-3); }
+  .qty-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .qty-label { font-size: 13px; color: var(--text-2); flex: 1; }
+  .qty-ctrl { display: flex; align-items: center; gap: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+  .qty-btn { width: 42px; height: 42px; border: none; background: var(--bg); font-size: 20px; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .qty-btn:active { background: var(--border); }
+  #modal-qty-val { width: 52px; height: 42px; text-align: center; border: none; border-left: 1px solid var(--border); border-right: 1px solid var(--border); font-size: 16px; font-weight: 600; color: var(--text); background: var(--surface); -webkit-appearance: none; outline: none; }
+  .modal-subtotal { font-size: 13px; color: var(--text-2); text-align: center; margin-bottom: 16px; }
+  .modal-subtotal strong { color: var(--text); }
+  .btn-add-confirm { width: 100%; padding: 14px; background: var(--orange); border: none; border-radius: var(--radius); color: white; font-size: 16px; font-weight: 700; cursor: pointer; }
+  .btn-add-confirm:active { background: var(--orange-dark); }
+
+  /* ---- TOAST ---- */
+  .toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-80px); background: #1A1A1A; color: white; padding: 10px 18px; border-radius: 20px; font-size: 14px; font-weight: 500; z-index: 200; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); white-space: nowrap; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- HEADER -->
+  <div id="header">
+    <div class="header-top">
+      <div class="logo">
+        <div class="logo-mark">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div class="logo-name">Arregla<span>Ya</span></div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-icon" onclick="showInstallTip()" title="Instalar app">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v13m0 0l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 004.561 21H19.44a2 2 0 001.94-1.515L22 17"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="nivel-selector">
+      <button class="nivel-btn" data-nivel="eco" onclick="setNivel('eco')">Económico</button>
+      <button class="nivel-btn active" data-nivel="std" onclick="setNivel('std')">Estándar</button>
+      <button class="nivel-btn" data-nivel="pre" onclick="setNivel('pre')">Premium</button>
+    </div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-buscar-btn" onclick="showView('buscar')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      Catálogo
+    </button>
+    <button class="tab-btn" id="tab-cot-btn" onclick="showView('cotizacion')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+      Cotización <span class="tab-badge" id="badge-count">0</span>
+    </button>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+
+    <!-- VISTA: CATÁLOGO -->
+    <div id="view-buscar">
+      <div class="search-wrap">
+        <div class="search-input-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="search" id="search-input" placeholder="Buscar servicio..." autocomplete="off" autocorrect="off" oninput="onSearch(this.value)" onfocus="onSearchFocus()">
+          <button id="search-clear" onclick="clearSearch()">
+            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="cats-wrap">
+        <div class="cats-inner" id="cats-inner">
+          <button class="cat-chip active" data-cat="" onclick="setCategory('')">Todos</button>
+        </div>
+      </div>
+
+      <div id="results-section">
+        <div class="hint-box" id="hint-start">
+          <div class="hint-icon">🔧</div>
+          <div class="hint-title">Busca un servicio</div>
+          <div class="hint-sub">Escribe el nombre o categoría,<br>o selecciona una categoría arriba.</div>
+        </div>
+        <div id="results-list"></div>
+      </div>
+
+      <div class="manual-toggle">
+        <button class="manual-toggle-btn" onclick="toggleManual()">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+          Agregar ítem manual
+        </button>
+      </div>
+      <div id="manual-form">
+        <div class="form-row">
+          <label>Descripción</label>
+          <input type="text" id="m-desc" placeholder="Ej: Limpieza de cisterna">
+        </div>
+        <div class="form-grid">
+          <div class="form-row">
+            <label>Cantidad</label>
+            <input type="number" id="m-cant" value="1" min="0.1" step="0.1">
+          </div>
+          <div class="form-row">
+            <label>Precio unit.</label>
+            <input type="number" id="m-precio" placeholder="0.00" min="0">
+          </div>
+          <div class="form-row">
+            <label>Unidad</label>
+            <input type="text" id="m-unidad" placeholder="serv">
+          </div>
+        </div>
+        <button class="btn-submit" onclick="agregarManual()">Agregar a cotización</button>
+      </div>
+      <div style="height: 16px;"></div>
+    </div>
+
+    <!-- VISTA: COTIZACIÓN -->
+    <div id="view-cot">
+      <div class="cot-header">
+        <div class="cot-header-fields">
+          <div>
+            <div class="cot-label">Cliente / Empresa</div>
+            <input class="cot-input" id="cot-cliente" type="text" placeholder="Nombre o empresa">
+          </div>
+          <div>
+            <div class="cot-label">Fecha</div>
+            <input class="cot-input" id="cot-fecha" type="text" readonly>
+          </div>
+        </div>
+        <div>
+          <div class="cot-label">Descripción del servicio (opcional)</div>
+          <input class="cot-input" id="cot-desc" type="text" placeholder="Ej: Mantenimiento correctivo oficinas" style="margin-bottom:12px">
+        </div>
+      </div>
+      <div class="cot-section-label">Partidas</div>
+      <div id="cot-items"></div>
+      <div id="cot-totals"></div>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- FOOTER BAR (cotización) -->
+  <div id="footer-bar">
+    <div class="footer-inner">
+      <div class="footer-summary">
+        <div class="footer-items" id="footer-items-label">0 partidas</div>
+        <div class="footer-total" id="footer-total">$0</div>
+      </div>
+      <button class="btn-wa" onclick="enviarWhatsApp()">
+        <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Enviar por WhatsApp
+      </button>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- MODAL agregar cantidad -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-cat"></div>
+    <div class="modal-service-name" id="modal-name"></div>
+    <div class="modal-price-row">
+      <div>
+        <div class="modal-price-label">Precio unitario</div>
+        <div class="modal-price-unit" id="modal-unit"></div>
+      </div>
+      <div class="modal-price-val" id="modal-price"></div>
+    </div>
+    <div class="qty-row">
+      <div class="qty-label">Cantidad</div>
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <input type="number" id="modal-qty-val" value="1" min="0.1" step="1" oninput="updateModalSubtotal()">
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+      </div>
+    </div>
+    <div class="modal-subtotal" id="modal-subtotal">Subtotal: <strong>$0</strong></div>
+    <button class="btn-add-confirm" onclick="confirmAdd()">Agregar a cotización</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== CATÁLOGO =====================
+const CATALOG = [
+  // Acabados
+  {code:"AZU-COLO",name:"Colocación de azulejo (solo m.o.)",unit:"m2",cat:"Acabados",eco:329.99,std:389.99,pre:476.67},
+  // Construcción
+  {code:"DEM-AZU",name:"Demolición de azulejo + retiro",unit:"m2",cat:"Construcción",eco:253.84,std:299.99,pre:366.65},
+  {code:"DEM-MURO",name:"Demolición de muros (block + retiro)",unit:"m2",cat:"Construcción",eco:296.15,std:349.99,pre:427.77},
+  {code:"DRY-RH",name:"Muro tablaroca RH doble cara",unit:"m2",cat:"Construcción",eco:355.38,std:419.99,pre:513.32},
+  // Electricidad
+  {code:"ELE-APAG",name:"Cambio / instalación de apagador sencillo",unit:"pza",cat:"Electricidad",eco:286.83,std:338.98,pre:414.31},
+  {code:"ELE-CONTACT-INT",name:"Cambio de contacto dúplex interior con tapa",unit:"pza",cat:"Electricidad",eco:330.31,std:390.36,pre:477.11},
+  {code:"ELE-CONTACT-EXT",name:"Instalación de contacto exterior con cubierta",unit:"pza",cat:"Electricidad",eco:441.57,std:521.85,pre:637.82},
+  {code:"ELE-CANAL-EXP",name:"Canalización expuesta (conduit/tubo)",unit:"ml",cat:"Electricidad",eco:152.30,std:179.99,pre:219.99},
+  {code:"ELE-CANAL-OCU",name:"Canalización oculta (ranura + resane)",unit:"ml",cat:"Electricidad",eco:270.77,std:319.99,pre:391.11},
+  {code:"ELE-TABL",name:"Centro de carga / tablero (inst. o sustitución)",unit:"pza",cat:"Electricidad",eco:1522.96,std:1799.86,pre:2199.83},
+  {code:"ELE-FALLA",name:"Corrección de fallas y cortos",unit:"serv",cat:"Electricidad",eco:1015.45,std:1200.08,pre:1466.76},
+  {code:"ELE-CONTACT",name:"Instalación de contactos y apagadores",unit:"pza",cat:"Electricidad",eco:297.47,std:351.55,pre:429.68},
+  {code:"ELE-PUNTO",name:"Punto eléctrico básico (contacto/lámpara)",unit:"pza",cat:"Electricidad",eco:380.77,std:449.99,pre:549.99},
+  {code:"ELE-PUNTO-COMP",name:"Punto eléctrico completo (canal.+cable+disp.)",unit:"pza",cat:"Electricidad",eco:719.24,std:850.01,pre:1038.91},
+  {code:"ELE-CABL",name:"Sustitución de cableado (incluye tendido)",unit:"ml",cat:"Electricidad",eco:101.53,std:119.99,pre:146.66},
+  {code:"ELE-CABLE-12",name:"Cable uso rudo calibre 12 instalado",unit:"ml",cat:"Electricidad",eco:139.08,std:164.36,pre:200.89},
+  {code:"ELE-RECABLE",name:"Recableado de foco / lámpara existente",unit:"pza",cat:"Electricidad",eco:549.35,std:649.24,pre:793.51},
+  {code:"ELE-CAJA",name:"Instalación de caja de conexión superficial",unit:"pza",cat:"Electricidad",eco:399.85,std:472.55,pre:577.56},
+  {code:"ELE-PROT",name:"Protección eléctrica y mantenimiento",unit:"serv",cat:"Electricidad",eco:1523.05,std:1799.97,pre:2199.97},
+  // Iluminación
+  {code:"ELE-FOCO",name:"Cambio de foco / bombilla en punto existente",unit:"pza",cat:"Iluminación",eco:173.85,std:205.45,pre:251.11},
+  {code:"ELE-LUM",name:"Instalación / cambio de luminaria sencilla",unit:"pza",cat:"Iluminación",eco:399.85,std:472.55,pre:577.56},
+  {code:"ELE-LED",name:"Instalación de iluminación LED (punto)",unit:"pza",cat:"Iluminación",eco:380.77,std:449.99,pre:549.99},
+  {code:"ELE-OFFICE",name:"Iluminación para oficinas (punto)",unit:"pza",cat:"Iluminación",eco:380.77,std:449.99,pre:549.99},
+  {code:"ELE-DECO",name:"Iluminación decorativa (restaurantes/tiendas)",unit:"pza",cat:"Iluminación",eco:550.01,std:650.01,pre:794.45},
+  {code:"ELE-IND",name:"Iluminación industrial y de altura",unit:"pza",cat:"Iluminación",eco:1015.40,std:1200.02,pre:1466.69},
+  {code:"ELE-SUST-LUM",name:"Sustitución de luminarias",unit:"pza",cat:"Iluminación",eco:423.09,std:500.01,pre:611.12},
+  {code:"ELE-AMBI",name:"Diseño básico de ambientación (paquete)",unit:"LS",cat:"Iluminación",eco:2960.93,std:3499.28,pre:4276.90},
+  // Impermeabilización
+  {code:"IMPER",name:"Impermeabilización (manto / acrílico)",unit:"m2",cat:"Impermeabilización",eco:194.62,std:230.01,pre:281.12},
+  {code:"RES-HUM",name:"Resane por humedad (sellado + resanador)",unit:"m2",cat:"Impermeabilización",eco:156.53,std:184.99,pre:226.09},
+  // Pintura
+  {code:"PNT-INT",name:"Pintura interior (muros / plafón)",unit:"m2",cat:"Pintura",eco:80.38,std:95.00,pre:116.11},
+  {code:"PNT-EXT",name:"Pintura exterior",unit:"m2",cat:"Pintura",eco:109.99,std:129.99,pre:158.87},
+  // Plomería
+  {code:"PLO-PVC",name:"Drenaje PVC sanitario 2\" instalado",unit:"ml",cat:"Plomería",eco:279.24,std:330.01,pre:403.34},
+  {code:"PLO-CPVC",name:"Tubería CPVC 1/2\" instalada",unit:"ml",cat:"Plomería",eco:236.93,std:280.01,pre:342.23},
+  {code:"WC-INST",name:"Instalación de WC (conexión a drenaje exist.)",unit:"pza",cat:"Plomería",eco:2030.61,std:2399.81,pre:2933.10},
+  {code:"LAV-REU",name:"Reubicación de lavabo (empotrado)",unit:"pza",cat:"Plomería",eco:2622.82,std:3099.70,pre:3788.52},
+  {code:"MING-REU",name:"Reubicación de mingitorio (empotrado)",unit:"pza",cat:"Plomería",eco:3300.25,std:3900.29,pre:4767.03},
+  {code:"PLO-TINACO-INST",name:"Instalación de tinaco 750-1100 L en base exist.",unit:"serv",cat:"Plomería",eco:2369.60,std:2800.44,pre:3422.76},
+  {code:"PLO-TINACO-CONEX",name:"Conexión básica de tinaco a línea existente",unit:"serv",cat:"Plomería",eco:1522.89,std:1799.78,pre:2199.73},
+  // Ventilación
+  {code:"VENT-EXTR",name:"Instalación de extractor + ductería básica",unit:"pza",cat:"Ventilación",eco:2115.36,std:2499.97,pre:3055.52},
+  // Carpintería
+  {code:"CER-CHAPA",name:"Instalación o cambio de chapa sencilla",unit:"pza",cat:"Carpintería",eco:549.35,std:649.24,pre:793.51},
+  // General
+  {code:"GEN-VISITA",name:"Visita mínima / paquete de trabajos pequeños",unit:"serv",cat:"General",eco:801.80,std:947.58,pre:1158.16},
+];
+
+// ===================== STATE =====================
+let nivel = 'std';
+let activeCategory = '';
+let items = [];
+let nextId = 1;
+let modalService = null;
+let currentView = 'buscar';
+let manualOpen = false;
+
+// ===================== INIT =====================
+function init() {
+  // Fecha
+  const hoy = new Date();
+  document.getElementById('cot-fecha').value = hoy.toLocaleDateString('es-MX', {day:'2-digit', month:'2-digit', year:'numeric'});
+
+  // Build category chips
+  const cats = [...new Set(CATALOG.map(s => s.cat))].sort();
+  const inner = document.getElementById('cats-inner');
+  cats.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-chip';
+    btn.dataset.cat = cat;
+    btn.textContent = cat;
+    btn.onclick = () => setCategory(cat);
+    inner.appendChild(btn);
+  });
+}
+
+// ===================== NIVEL =====================
+function setNivel(n) {
+  nivel = n;
+  document.querySelectorAll('.nivel-btn').forEach(b => b.classList.toggle('active', b.dataset.nivel === n));
+  renderResults();
+  if (modalService) updateModalPrice();
+}
+
+// ===================== SEARCH + FILTER =====================
+function getPrice(s) {
+  return nivel === 'eco' ? s.eco : nivel === 'pre' ? s.pre : s.std;
+}
+
+function onSearch(q) {
+  renderResults(q);
+}
+
+function onSearchFocus() {
+  document.getElementById('hint-start').style.display = 'none';
+  renderResults(document.getElementById('search-input').value);
+}
+
+function clearSearch() {
+  document.getElementById('search-input').value = '';
+  renderResults('');
+}
+
+function setCategory(cat) {
+  activeCategory = cat;
+  document.querySelectorAll('.cat-chip').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+  document.getElementById('hint-start').style.display = 'none';
+  renderResults(document.getElementById('search-input').value);
+}
+
+function renderResults(q = '') {
+  const q2 = q.toLowerCase().trim();
+  let filtered = CATALOG;
+
+  if (activeCategory) filtered = filtered.filter(s => s.cat === activeCategory);
+  if (q2) {
+    filtered = filtered.filter(s =>
+      s.name.toLowerCase().includes(q2) ||
+      s.cat.toLowerCase().includes(q2) ||
+      s.code.toLowerCase().includes(q2)
+    );
+  }
+
+  const list = document.getElementById('results-list');
+  const hint = document.getElementById('hint-start');
+
+  if (!q2 && !activeCategory) {
+    hint.style.display = '';
+    list.innerHTML = '';
+    return;
+  }
+
+  hint.style.display = 'none';
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="hint-box"><div class="hint-icon">🔍</div><div class="hint-title">Sin resultados</div><div class="hint-sub">Intenta con otra búsqueda<br>o agrégalo como ítem manual.</div></div>';
+    return;
+  }
+
+  // Group by category if no active filter
+  let html = '';
+  if (!activeCategory) {
+    const bycat = {};
+    filtered.forEach(s => { (bycat[s.cat] = bycat[s.cat] || []).push(s); });
+    Object.keys(bycat).sort().forEach(cat => {
+      html += `<div class="section-label" style="margin-top:14px">${cat}</div>`;
+      bycat[cat].forEach(s => { html += serviceCard(s); });
+    });
+  } else {
+    filtered.forEach(s => { html += serviceCard(s); });
+  }
+
+  list.innerHTML = html;
+}
+
+function serviceCard(s) {
+  const p = getPrice(s);
+  return `<div class="service-card" onclick="openModal('${s.code}')">
+    <div class="sc-info">
+      <div class="sc-name">${s.name}</div>
+      <div class="sc-meta">${s.cat} · ${s.unit}</div>
+    </div>
+    <div class="sc-price">
+      <div class="sc-price-num">${fmt(p)}</div>
+      <div class="sc-price-unit">/${s.unit}</div>
+    </div>
+    <div class="sc-add-btn" aria-label="Agregar">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+    </div>
+  </div>`;
+}
+
+// ===================== MODAL =====================
+function openModal(code) {
+  modalService = CATALOG.find(s => s.code === code);
+  if (!modalService) return;
+  document.getElementById('modal-cat').textContent = modalService.cat;
+  document.getElementById('modal-name').textContent = modalService.name;
+  document.getElementById('modal-unit').textContent = 'por ' + modalService.unit;
+  document.getElementById('modal-qty-val').value = 1;
+  updateModalPrice();
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('modal-qty-val').focus();
+}
+
+function updateModalPrice() {
+  if (!modalService) return;
+  const p = getPrice(modalService);
+  document.getElementById('modal-price').textContent = fmt(p);
+  updateModalSubtotal();
+}
+
+function updateModalSubtotal() {
+  if (!modalService) return;
+  const qty = parseFloat(document.getElementById('modal-qty-val').value) || 1;
+  const p = getPrice(modalService);
+  document.getElementById('modal-subtotal').innerHTML = `Subtotal: <strong>${fmt(qty * p)}</strong>`;
+}
+
+function changeQty(delta) {
+  const inp = document.getElementById('modal-qty-val');
+  const cur = parseFloat(inp.value) || 1;
+  const next = Math.max(0.5, cur + delta);
+  inp.value = Number.isInteger(next) ? next : next.toFixed(1);
+  updateModalSubtotal();
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal') || !e) {
+    document.getElementById('modal').classList.remove('open');
+    modalService = null;
+  }
+}
+
+function confirmAdd() {
+  if (!modalService) return;
+  const qty = parseFloat(document.getElementById('modal-qty-val').value) || 1;
+  const precio = getPrice(modalService);
+  items.push({
+    id: nextId++,
+    desc: modalService.name,
+    unit: modalService.unit,
+    cant: qty,
+    precio,
+    cat: modalService.cat,
+    fromCatalog: true,
+  });
+  document.getElementById('modal').classList.remove('open');
+  modalService = null;
+  renderCotizacion();
+  updateBadge();
+  showToast('✓ Agregado a la cotización');
+}
+
+// ===================== MANUAL =====================
+function toggleManual() {
+  manualOpen = !manualOpen;
+  document.getElementById('manual-form').classList.toggle('open', manualOpen);
+}
+
+function agregarManual() {
+  const desc = document.getElementById('m-desc').value.trim();
+  const cant = parseFloat(document.getElementById('m-cant').value) || 1;
+  const precio = parseFloat(document.getElementById('m-precio').value) || 0;
+  const unit = document.getElementById('m-unidad').value.trim() || 'serv';
+  if (!desc) { showToast('⚠️ Escribe una descripción'); return; }
+  if (!precio) { showToast('⚠️ Escribe un precio unitario'); return; }
+  items.push({ id: nextId++, desc, unit, cant, precio, cat: 'Manual', fromCatalog: false });
+  document.getElementById('m-desc').value = '';
+  document.getElementById('m-precio').value = '';
+  document.getElementById('m-unidad').value = '';
+  document.getElementById('m-cant').value = 1;
+  renderCotizacion();
+  updateBadge();
+  showToast('✓ Ítem manual agregado');
+  showView('cotizacion');
+}
+
+// ===================== COTIZACIÓN =====================
+function renderCotizacion() {
+  const cotItems = document.getElementById('cot-items');
+  const cotTotals = document.getElementById('cot-totals');
+  const footerBar = document.getElementById('footer-bar');
+
+  if (!items.length) {
+    cotItems.innerHTML = '<div class="cot-empty">Aún no hay partidas.<br>Busca servicios en el catálogo.</div>';
+    cotTotals.innerHTML = '';
+    footerBar.style.display = 'none';
+    return;
+  }
+
+  footerBar.style.display = 'block';
+
+  cotItems.innerHTML = items.map((item, i) => {
+    const sub = item.cant * item.precio;
+    return `<div class="cot-item">
+      <div class="cot-item-info">
+        <div class="cot-item-name">${item.desc}</div>
+        <div class="cot-item-detail">${item.cant} ${item.unit} × ${fmt(item.precio)}</div>
+      </div>
+      <div class="cot-item-right">
+        <div class="cot-item-subtotal">${fmt(sub)}</div>
+      </div>
+      <button class="cot-item-del" onclick="eliminarItem(${item.id})" aria-label="Eliminar partida">
+        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+      </button>
+    </div>`;
+  }).join('');
+
+  const subtotal = items.reduce((s, x) => s + x.cant * x.precio, 0);
+  const iva = subtotal * 0.16;
+  const total = subtotal + iva;
+
+  cotTotals.innerHTML = `<div class="cot-totals">
+    <div class="tot-row"><span>Subtotal sin IVA</span><span>${fmt(subtotal)}</span></div>
+    <div class="tot-row"><span>IVA 16%</span><span>${fmt(iva)}</span></div>
+    <div class="tot-row big"><span>Total con IVA</span><span>${fmt(total)}</span></div>
+  </div>`;
+
+  // Footer
+  document.getElementById('footer-items-label').textContent = `${items.length} partida${items.length !== 1 ? 's' : ''}`;
+  document.getElementById('footer-total').textContent = fmt(total);
+}
+
+function eliminarItem(id) {
+  items = items.filter(x => x.id !== id);
+  renderCotizacion();
+  updateBadge();
+}
+
+function updateBadge() {
+  document.getElementById('badge-count').textContent = items.length;
+}
+
+// ===================== VISTAS =====================
+function showView(view) {
+  currentView = view;
+  document.getElementById('view-buscar').style.display = view === 'buscar' ? 'block' : 'none';
+  document.getElementById('view-cot').style.display = view === 'cotizacion' ? 'block' : 'none';
+  document.getElementById('tab-buscar-btn').classList.toggle('active', view === 'buscar');
+  document.getElementById('tab-cot-btn').classList.toggle('active', view === 'cotizacion');
+
+  if (view === 'cotizacion') {
+    renderCotizacion();
+    document.getElementById('footer-bar').style.display = items.length ? 'block' : 'none';
+  } else {
+    document.getElementById('footer-bar').style.display = 'none';
+  }
+}
+
+// ===================== WHATSAPP =====================
+function enviarWhatsApp() {
+  if (!items.length) { showToast('⚠️ La cotización está vacía'); return; }
+
+  const cliente = document.getElementById('cot-cliente').value.trim() || 'Cliente';
+  const desc = document.getElementById('cot-desc').value.trim();
+  const fecha = document.getElementById('cot-fecha').value;
+  const nivelNombre = nivel === 'eco' ? 'Económico' : nivel === 'pre' ? 'Premium' : 'Estándar';
+  const subtotal = items.reduce((s, x) => s + x.cant * x.precio, 0);
+  const iva = subtotal * 0.16;
+  const total = subtotal + iva;
+
+  let msg = `*COTIZACIÓN — ARREGLA YA*\n`;
+  msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `📋 *Cliente:* ${cliente}\n`;
+  msg += `📅 *Fecha:* ${fecha}\n`;
+  msg += `🏷 *Nivel:* ${nivelNombre}\n`;
+  if (desc) msg += `🔧 *Servicio:* ${desc}\n`;
+  msg += `\n*PARTIDAS*\n`;
+
+  items.forEach((item, i) => {
+    const sub = item.cant * item.precio;
+    msg += `\n${i + 1}. ${item.desc}\n`;
+    msg += `   ${item.cant} ${item.unit} × ${fmtPlano(item.precio)} = *${fmtPlano(sub)}*\n`;
+  });
+
+  msg += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `Subtotal:     ${fmtPlano(subtotal)}\n`;
+  msg += `IVA 16%:      ${fmtPlano(iva)}\n`;
+  msg += `*TOTAL:       ${fmtPlano(total)}*\n`;
+  msg += `\n_Vigencia: 15 días naturales_\n`;
+  msg += `_ArreglaYa · arreglaya.mx · 833 335 7517_`;
+
+  const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+}
+
+// ===================== UTIL =====================
+function fmt(n) {
+  return '$' + Math.round(n).toLocaleString('es-MX');
+}
+
+function fmtPlano(n) {
+  return '$' + Math.round(n).toLocaleString('es-MX');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function showInstallTip() {
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const isAndroid = /Android/.test(navigator.userAgent);
+  if (isIOS) {
+    showToast('Toca "Compartir" → "Agregar a inicio"');
+  } else if (isAndroid) {
+    showToast('Toca menú ⋮ → "Agregar a pantalla de inicio"');
+  } else {
+    showToast('Abre desde tu celular para instalar');
+  }
+}
+
+// Keyboard: close modal on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.getElementById('modal').classList.remove('open');
+});
+
+
+// ===================== PWA + PERSISTENCIA LOCAL =====================
+const STORAGE_KEY = 'arreglaya_cotizador_estado_v1';
+
+function saveCotizadorState() {
+  try {
+    const clienteEl = document.getElementById('cot-cliente');
+    const descEl = document.getElementById('cot-desc');
+    const state = {
+      nivel,
+      activeCategory,
+      items,
+      nextId,
+      cliente: clienteEl ? clienteEl.value : '',
+      desc: descEl ? descEl.value : ''
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (err) {
+    console.warn('No se pudo guardar el estado local:', err);
+  }
+}
+
+function loadCotizadorState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const state = JSON.parse(raw);
+    if (!state || typeof state !== 'object') return;
+
+    nivel = ['eco', 'std', 'pre'].includes(state.nivel) ? state.nivel : 'std';
+    activeCategory = state.activeCategory || '';
+    items = Array.isArray(state.items) ? state.items : [];
+    nextId = Number.isFinite(Number(state.nextId)) ? Number(state.nextId) : (items.length + 1);
+
+    document.querySelectorAll('.nivel-btn').forEach(b => b.classList.toggle('active', b.dataset.nivel === nivel));
+    document.querySelectorAll('.cat-chip').forEach(b => b.classList.toggle('active', b.dataset.cat === activeCategory));
+
+    const clienteEl = document.getElementById('cot-cliente');
+    const descEl = document.getElementById('cot-desc');
+    if (clienteEl && state.cliente) clienteEl.value = state.cliente;
+    if (descEl && state.desc) descEl.value = state.desc;
+  } catch (err) {
+    console.warn('No se pudo cargar el estado local:', err);
+  }
+}
+
+function attachAutosave() {
+  ['cot-cliente', 'cot-desc'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', saveCotizadorState);
+  });
+}
+
+const _setNivelOriginal = setNivel;
+setNivel = function(n) {
+  _setNivelOriginal(n);
+  saveCotizadorState();
+};
+
+const _confirmAddOriginal = confirmAdd;
+confirmAdd = function() {
+  _confirmAddOriginal();
+  saveCotizadorState();
+};
+
+const _agregarManualOriginal = agregarManual;
+agregarManual = function() {
+  _agregarManualOriginal();
+  saveCotizadorState();
+};
+
+const _eliminarItemOriginal = eliminarItem;
+eliminarItem = function(id) {
+  _eliminarItemOriginal(id);
+  saveCotizadorState();
+};
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Service worker no registrado:', err));
+  });
+}
+
+init();
+loadCotizadorState();
+attachAutosave();
+renderCotizacion();
+updateBadge();
+</script>
+
+</body>
+</html>

@@ -318,13 +318,13 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
         <div class="steps-box">
           <div class="step-row"><div class="step-num">1</div><div class="step-txt">Sube tu Excel a <strong>Google Drive</strong> y ábrelo con Google Sheets</div></div>
           <div class="step-row"><div class="step-num">2</div><div class="step-txt">En Sheets: <strong>Archivo → Compartir → Publicar en la web</strong> → Hoja CATALOG → CSV</div></div>
-          <div class="step-row"><div class="step-num">3</div><div class="step-txt">Copia el <strong>ID del archivo</strong> de la URL (la parte entre /d/ y /edit)</div></div>
+          <div class="step-row"><div class="step-num">3</div><div class="step-txt">Copia el <strong>enlace CSV publicado</strong> o el ID del archivo</div></div>
           <div class="step-row"><div class="step-num">4</div><div class="step-txt">Pégalo abajo y presiona <strong>Guardar y sincronizar</strong></div></div>
         </div>
         <div class="cfg-field">
-          <label>ID del Google Sheet</label>
-          <input type="text" id="cfg-sheet-id" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
-          <div class="hint-text">Lo encuentras en la URL del Sheet: docs.google.com/spreadsheets/d/<strong>ESTE-ES-EL-ID</strong>/edit</div>
+          <label>ID del Google Sheet o enlace CSV publicado</label>
+          <input type="text" id="cfg-sheet-id" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?gid=...&single=true&output=csv">
+          <div class="hint-text">Recomendado: pega el enlace CSV de “Publicar en la web”. También acepta el ID normal entre /d/ y /edit.</div>
         </div>
         <div class="cfg-field">
           <label>Nombre de la hoja (tab)</label>
@@ -515,14 +515,28 @@ async function syncSheets() {
   lbl.textContent = 'Sincronizando...';
   setSheetStatus('loading','Conectando con Google Sheets...');
 
-  // Use the published CSV export URL (no API key needed, just needs to be published)
+  // Acepta dos formas:
+  // 1) Enlace CSV publicado de Google Sheets: https://docs.google.com/spreadsheets/d/e/.../pub?...&output=csv
+  // 2) ID normal del Sheet: docs.google.com/spreadsheets/d/ESTE_ID/edit
   const tab = cfg.sheetTab || 'CATALOG';
-  const url = `https://docs.google.com/spreadsheets/d/${cfg.sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
+  const input = (cfg.sheetId || '').trim();
+  const urls = buildSheetUrls(input, tab);
 
   try {
-    const res = await fetch(url, {cache:'no-store'});
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
+    let lastError = null;
+    let text = '';
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, {cache:'no-store'});
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        text = await res.text();
+        if (text && /servicecode|servicio/i.test(text)) break;
+        throw new Error('Respuesta sin encabezados de catálogo');
+      } catch (err) {
+        lastError = err;
+      }
+    }
+    if (!text) throw lastError || new Error('Sin respuesta');
     const parsed = parseSheetCSV(text);
     if (parsed.length > 0) {
       catalog = parsed;
@@ -542,6 +556,56 @@ async function syncSheets() {
 
   btn.classList.remove('syncing');
   lbl.textContent = 'Actualizar catálogo';
+}
+
+
+function buildSheetUrls(input, tab) {
+  const clean = input.trim();
+  if (!clean) return [];
+
+  // Si el usuario pega el enlace CSV publicado, úsalo directo.
+  if (/^https?:\/\//i.test(clean)) {
+    const urls = [clean];
+    // Si pegó la URL normal /d/ID/edit, extrae el ID y agrega gviz como respaldo.
+    const idMatch = clean.match(/\/spreadsheets\/d\/([^\/]+)/);
+    if (idMatch && idMatch[1] && idMatch[1] !== 'e') {
+      urls.push(`https://docs.google.com/spreadsheets/d/${idMatch[1]}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`);
+    }
+    return [...new Set(urls)];
+  }
+
+  // Si pega solo el ID normal.
+  return [`https://docs.google.com/spreadsheets/d/${clean}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`];
+}
+
+function toNumber(value) {
+  if (value === null || value === undefined) return 0;
+  let s = String(value).trim();
+  if (!s) return 0;
+  // Quita moneda, espacios y caracteres no numéricos comunes.
+  s = s.replace(/\s/g, '').replace(/[$€£MXNmxn]/g, '').replace(/[^0-9,.-]/g, '');
+  if (!s) return 0;
+
+  const hasComma = s.includes(',');
+  const hasDot = s.includes('.');
+
+  if (hasComma && hasDot) {
+    // Decide por el último separador: 1.523,00 => 1523.00 / 1,523.00 => 1523.00
+    if (s.lastIndexOf(',') > s.lastIndexOf('.')) s = s.replace(/\./g, '').replace(',', '.');
+    else s = s.replace(/,/g, '');
+  } else if (hasComma) {
+    const parts = s.split(',');
+    // 1523,00 => 1523.00; 1,523 => 1523 cuando parece miles
+    if (parts.length === 2 && parts[1].length === 3 && parts[0].length <= 3) s = parts.join('');
+    else s = s.replace(',', '.');
+  } else if (hasDot) {
+    const parts = s.split('.');
+    // 1.523 => 1523 cuando parece miles; 1523.50 se respeta decimal
+    if (parts.length === 2 && parts[1].length === 3 && parts[0].length <= 3) s = parts.join('');
+  }
+
+  const n = Number(s);
+  return Number.isFinite(n) ? n : 0;
 }
 
 function parseSheetCSV(text) {
@@ -573,9 +637,9 @@ function parseSheetCSV(text) {
   for (let i = headerIdx + 1; i < lines.length; i++) {
     const row = parseCSVRow(lines[i]);
     if (!row.length || !row[codeI]) continue;
-    const eco = parseFloat(row[ecoI]) || 0;
-    const std = parseFloat(row[stdI]) || 0;
-    const pre = parseFloat(row[preI]) || 0;
+    const eco = toNumber(row[ecoI]) || 0;
+    const std = toNumber(row[stdI]) || 0;
+    const pre = toNumber(row[preI]) || 0;
     if (!std && !eco && !pre) continue;
     results.push({
       code: row[codeI] || '',

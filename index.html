@@ -132,14 +132,16 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 .btn-wa-pdf{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;background:var(--or);border:none;border-radius:var(--r);color:#fff;font-size:15px;font-weight:600;cursor:pointer;width:100%}
 .btn-wa-pdf:active{background:var(--or-d)}
 .btn-wa-pdf svg{width:20px;height:20px;fill:#fff;flex-shrink:0;display:block}
+.btn-new{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:var(--sf);border:1px solid var(--or);border-radius:var(--r);color:var(--or);font-size:15px;font-weight:700;cursor:pointer;width:100%}
+.btn-new:active{background:var(--or-l)}
 
 /* CONFIG VIEW */
 .cfg-sec{padding:16px 16px 8px}
 .cfg-sec-title{font-size:13px;font-weight:700;color:var(--tx);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--bd)}
 .cfg-field{margin-bottom:12px}
 .cfg-field label{font-size:12px;font-weight:600;color:var(--tx2);display:block;margin-bottom:4px}
-.cfg-field input,.cfg-field textarea{width:100%;padding:9px 12px;border:1px solid var(--bd);border-radius:var(--rs);font-size:14px;color:var(--tx);background:var(--sf);-webkit-appearance:none;outline:none;font-family:inherit}
-.cfg-field input:focus,.cfg-field textarea:focus{border-color:var(--or)}
+.cfg-field input,.cfg-field textarea,.cfg-field select{width:100%;padding:9px 12px;border:1px solid var(--bd);border-radius:var(--rs);font-size:14px;color:var(--tx);background:var(--sf);-webkit-appearance:none;outline:none;font-family:inherit}
+.cfg-field input:focus,.cfg-field textarea:focus,.cfg-field select:focus{border-color:var(--or)}
 .cfg-field textarea{resize:vertical;min-height:60px}
 .cfg-field .hint-text{font-size:11px;color:var(--tx3);margin-top:3px;line-height:1.4}
 .cfg-save{width:100%;padding:12px;background:var(--or);border:none;border-radius:var(--r);color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px}
@@ -266,7 +268,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
           <div class="fr"><label>Unidad</label><input type="text" id="m-unidad" placeholder="serv"></div>
         </div>
         <div class="fgrid" style="grid-template-columns:1fr 1fr;">
-          <div class="fr"><label>Categoría sugerida</label><input type="text" id="m-cat-sug" placeholder="Ej: Electricidad"></div>
+          <div class="fr"><label>Categoría sugerida</label><select id="m-cat-sug"><option value="Manual">Manual / General</option></select></div>
           <div class="fr"><label>Observación interna</label><input type="text" id="m-obs" placeholder="Ej: revisar para catálogo"></div>
         </div>
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--tx2);margin:4px 0 12px;">
@@ -292,8 +294,21 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
           <div><div class="cot-lbl">Fecha</div><input class="cot-inp" id="c-fecha" type="text" readonly></div>
         </div>
         <div class="cot-hdr-grid" style="margin-bottom:12px">
-          <div><div class="cot-lbl">Vigencia (días)</div><input class="cot-inp" id="c-vigencia" type="number" value="15"></div>
-          <div><div class="cot-lbl">Anticipo / condición</div><input class="cot-inp" id="c-condicion" type="text" placeholder="Ej: 50% anticipo"></div>
+          <div><div class="cot-lbl">Vigencia</div><select class="cot-inp" id="c-vigencia">
+            <option value="7">7 días naturales</option>
+            <option value="10">10 días naturales</option>
+            <option value="15" selected>15 días naturales</option>
+            <option value="30">30 días naturales</option>
+            <option value="45">45 días naturales</option>
+          </select></div>
+          <div><div class="cot-lbl">Anticipo</div><select class="cot-inp" id="c-anticipo">
+            <option value="Sin anticipo">Sin anticipo</option>
+            <option value="30% de anticipo">30% de anticipo</option>
+            <option value="50% de anticipo" selected>50% de anticipo</option>
+            <option value="70% de anticipo">70% de anticipo</option>
+            <option value="100% anticipado">100% anticipado</option>
+            <option value="Pago contra entrega">Pago contra entrega</option>
+          </select></div>
         </div>
       </div>
       <div class="cot-slbl">Partidas</div>
@@ -313,6 +328,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
             <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             Solo WhatsApp (texto)
           </button>
+          <button class="btn-new" onclick="nuevaCotizacion()">Nueva cotización / siguiente folio</button>
         </div>
       </div>
     </div>
@@ -344,6 +360,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
           <label>URL Web App para feedback manual</label>
           <input type="text" id="cfg-feedback-url" placeholder="https://script.google.com/macros/s/.../exec">
           <div class="hint-text">Opcional. Pega aquí la URL del Apps Script para guardar ítems manuales en FEEDBACK_MANUAL.</div>
+          <button class="cfg-save" style="margin-top:8px;background:#4B4B4B" onclick="probarFeedback()">Probar registro de feedback</button>
         </div>
       </div>
 
@@ -354,6 +371,21 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
         <div class="cfg-field"><label>Teléfono</label><input type="text" id="cfg-tel" placeholder="+52 833 335 7517"></div>
         <div class="cfg-field"><label>Correo</label><input type="text" id="cfg-email" placeholder="contacto@arreglaya.mx"></div>
         <div class="cfg-field"><label>Sitio web</label><input type="text" id="cfg-web" placeholder="arreglaya.mx"></div>
+        <div class="cfg-field"><label>Vigencia predeterminada</label><select id="cfg-vigencia-default">
+          <option value="7">7 días naturales</option>
+          <option value="10">10 días naturales</option>
+          <option value="15" selected>15 días naturales</option>
+          <option value="30">30 días naturales</option>
+          <option value="45">45 días naturales</option>
+        </select></div>
+        <div class="cfg-field"><label>Anticipo predeterminado</label><select id="cfg-anticipo-default">
+          <option value="Sin anticipo">Sin anticipo</option>
+          <option value="30% de anticipo">30% de anticipo</option>
+          <option value="50% de anticipo" selected>50% de anticipo</option>
+          <option value="70% de anticipo">70% de anticipo</option>
+          <option value="100% anticipado">100% anticipado</option>
+          <option value="Pago contra entrega">Pago contra entrega</option>
+        </select></div>
         <div class="cfg-field">
           <label>Sección "3. Alcance y consideraciones" del PDF</label>
           <textarea id="cfg-alcance" rows="2" placeholder="Definir alcance o consideraciones de manera ejecutiva."></textarea>
@@ -475,18 +507,23 @@ const DEFAULT_CFG = {
   tel: '+52 833 335 7517',
   email: 'contacto@arreglaya.mx',
   web: 'arreglaya.mx',
+  vigenciaDefault: '15',
+  anticipoDefault: '50% de anticipo',
   alcance: 'Alcance ejecutivo conforme a las partidas autorizadas. Incluye mano de obra, ejecución del servicio y pruebas básicas de funcionamiento cuando aplique.',
-  obs: 'Vigencia de cotización: 15 días naturales.\nTiempo estimado de ejecución sujeto a condiciones de acceso, horarios permitidos, disponibilidad de materiales, tiempos de secado y hallazgos durante la intervención.\nCualquier trabajo adicional deberá ser autorizado por el cliente antes de ejecutarse.\nLa mano de obra queda respaldada sobre los trabajos ejecutados. No cubre fallas derivadas de instalaciones existentes ocultas, materiales preexistentes deteriorados, humedad activa, mal uso o movimientos posteriores.'
+  obs: 'Vigencia de cotización: {vigencia}.\nCondición comercial: {anticipo}.\nTiempo estimado de ejecución sujeto a condiciones de acceso, horarios permitidos, disponibilidad de materiales, tiempos de secado y hallazgos durante la intervención.\nCualquier trabajo adicional deberá ser autorizado por el cliente antes de ejecutarse.\nLa mano de obra queda respaldada sobre los trabajos ejecutados. No cubre fallas derivadas de instalaciones existentes ocultas, materiales preexistentes deteriorados, humedad activa, mal uso o movimientos posteriores.'
 };
 let folioNum = 1;
+let folioMarcado = false;
 
 // ==================== INIT ====================
 function init() {
   loadConfig();
   const hoy = new Date();
   document.getElementById('c-fecha').value = hoy.toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'});
-  document.getElementById('c-folio').value = 'COT-' + String(folioNum).padStart(3,'0');
+  setNextFolio();
   document.getElementById('c-linea').value = lineaNombre();
+  setSelectValue('c-vigencia', cfg.vigenciaDefault || DEFAULT_CFG.vigenciaDefault);
+  setSelectValue('c-anticipo', cfg.anticipoDefault || DEFAULT_CFG.anticipoDefault);
   buildCats();
   // Auto-sync if sheet ID configured
   if (cfg.sheetId) setTimeout(syncSheets, 500);
@@ -497,6 +534,9 @@ function loadConfig() {
     const saved = localStorage.getItem('ay_cfg');
     if (saved) cfg = JSON.parse(saved);
   } catch(e) { cfg = {}; }
+  if (cfg.obs && cfg.obs.includes('Vigencia de cotización: 15 días naturales') && cfg.obs.includes('Tiempo estimado de ejecución sujeto')) {
+    cfg.obs = DEFAULT_CFG.obs;
+  }
   cfg = { ...DEFAULT_CFG, ...cfg };
   // Populate fields
   if (cfg.sheetId) document.getElementById('cfg-sheet-id').value = cfg.sheetId;
@@ -507,6 +547,8 @@ function loadConfig() {
   if (cfg.tel) document.getElementById('cfg-tel').value = cfg.tel;
   if (cfg.email) document.getElementById('cfg-email').value = cfg.email;
   if (cfg.web) document.getElementById('cfg-web').value = cfg.web;
+  setSelectValue('cfg-vigencia-default', cfg.vigenciaDefault || DEFAULT_CFG.vigenciaDefault);
+  setSelectValue('cfg-anticipo-default', cfg.anticipoDefault || DEFAULT_CFG.anticipoDefault);
   if (cfg.obs) document.getElementById('cfg-obs').value = cfg.obs;
   if (cfg.alcance) document.getElementById('cfg-alcance').value = cfg.alcance;
   if (cfg.folioNum) folioNum = cfg.folioNum;
@@ -522,11 +564,15 @@ function guardarConfig() {
     tel: document.getElementById('cfg-tel').value.trim(),
     email: document.getElementById('cfg-email').value.trim(),
     web: document.getElementById('cfg-web').value.trim(),
+    vigenciaDefault: document.getElementById('cfg-vigencia-default').value || DEFAULT_CFG.vigenciaDefault,
+    anticipoDefault: document.getElementById('cfg-anticipo-default').value || DEFAULT_CFG.anticipoDefault,
     obs: document.getElementById('cfg-obs').value.trim(),
     alcance: document.getElementById('cfg-alcance').value.trim(),
     folioNum,
   };
   try { localStorage.setItem('ay_cfg', JSON.stringify(cfg)); } catch(e) {}
+  setSelectValue('c-vigencia', cfg.vigenciaDefault || DEFAULT_CFG.vigenciaDefault);
+  setSelectValue('c-anticipo', cfg.anticipoDefault || DEFAULT_CFG.anticipoDefault);
   showToast('✓ Configuración guardada');
   if (cfg.sheetId) syncSheets();
   else showToast('⚠️ Agrega el ID del Sheet para sincronizar');
@@ -715,6 +761,16 @@ function buildCats() {
   activeCat = active;
   el.innerHTML = `<button class="cc ${!active?'active':''}" data-c="" onclick="setCat('')">Todos</button>` +
     cats.map(c => `<button class="cc ${c===active?'active':''}" data-c="${c}" onclick="setCat('${c}')">${c}</button>`).join('');
+  buildManualCategoryOptions(cats);
+}
+
+function buildManualCategoryOptions(cats) {
+  const sel = document.getElementById('m-cat-sug');
+  if (!sel) return;
+  const cur = sel.value || 'Manual';
+  const all = ['Manual', ...cats.filter(c => c && c !== 'Manual')];
+  sel.innerHTML = all.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c === 'Manual' ? 'Manual / General' : c)}</option>`).join('');
+  if (all.includes(cur)) sel.value = cur;
 }
 
 function gp(s) { return nivel==='res'?s.res:nivel==='ind'?s.ind:s.com; }
@@ -836,19 +892,15 @@ function agregarManual() {
   document.getElementById('m-precio').value = '';
   document.getElementById('m-unidad').value = '';
   document.getElementById('m-cant').value = 1;
-  document.getElementById('m-cat-sug').value = '';
+  document.getElementById('m-cat-sug').value = 'Manual';
   document.getElementById('m-obs').value = '';
   renderCot(); updateBadge();
   showToast(registrar && cfg.feedbackUrl ? '✓ Ítem agregado y enviado a feedback' : '✓ Ítem agregado');
   showView('cot');
 }
 
-async function enviarFeedbackManual(item) {
-  if (!cfg.feedbackUrl) {
-    showToast('ℹ Ítem agregado. Configura URL de feedback para registrarlo en Sheets.');
-    return;
-  }
-  const payload = {
+function buildFeedbackPayload(item) {
+  return {
     timestamp: new Date().toISOString(),
     folio: document.getElementById('c-folio').value || '',
     cliente: document.getElementById('c-cliente').value || '',
@@ -859,18 +911,74 @@ async function enviarFeedbackManual(item) {
     cantidad: item.cant,
     precioUnitario: item.precio,
     importe: item.cant * item.precio,
-    observaciones: item.obs || ''
+    observaciones: item.obs || '',
+    origen: 'ArreglaYa Cotizador V3.3'
   };
+}
+
+function enviarFeedbackManual(item) {
+  if (!cfg.feedbackUrl) {
+    showToast('ℹ Ítem agregado. Configura URL de feedback para registrarlo en Sheets.');
+    return;
+  }
+  postFeedback(buildFeedbackPayload(item));
+}
+
+function postFeedback(payload) {
+  if (!cfg.feedbackUrl) { showToast('⚠️ Falta URL de feedback'); return; }
   try {
-    await fetch(cfg.feedbackUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload)
+    const iframeName = 'feedback_iframe_' + Date.now();
+    const iframe = document.createElement('iframe');
+    iframe.name = iframeName;
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = cfg.feedbackUrl;
+    form.target = iframeName;
+    form.style.display = 'none';
+
+    const payloadInput = document.createElement('input');
+    payloadInput.name = 'payload';
+    payloadInput.value = JSON.stringify(payload);
+    form.appendChild(payloadInput);
+
+    Object.keys(payload).forEach(k => {
+      const input = document.createElement('input');
+      input.name = k;
+      input.value = payload[k] == null ? '' : String(payload[k]);
+      form.appendChild(input);
     });
+
+    document.body.appendChild(form);
+    form.submit();
+    setTimeout(() => { form.remove(); iframe.remove(); }, 6000);
   } catch(e) {
     console.warn('No se pudo enviar feedback manual', e);
+    showToast('⚠️ No se pudo enviar feedback');
   }
+}
+
+function probarFeedback() {
+  cfg.feedbackUrl = document.getElementById('cfg-feedback-url').value.trim();
+  if (!cfg.feedbackUrl) { showToast('⚠️ Pega primero la URL /exec del Apps Script'); return; }
+  postFeedback({
+    timestamp: new Date().toISOString(),
+    folio: document.getElementById('c-folio').value || 'TEST',
+    cliente: 'PRUEBA APP',
+    linea: lineaNombre(),
+    categoria: 'Prueba',
+    servicioManual: 'TEST_FEEDBACK_APP',
+    unidad: 'serv',
+    cantidad: 1,
+    precioUnitario: 1,
+    importe: 1,
+    observaciones: 'Prueba de conexión desde configuración',
+    origen: 'ArreglaYa Cotizador V3.3'
+  });
+  try { localStorage.setItem('ay_cfg', JSON.stringify({ ...cfg, feedbackUrl: cfg.feedbackUrl })); } catch(e) {}
+  showToast('✓ Prueba enviada. Revisa FEEDBACK_MANUAL');
 }
 
 // ==================== COTIZACIÓN ====================
@@ -930,13 +1038,15 @@ async function generarPDF(openWA) {
   const fecha      = document.getElementById('c-fecha').value;
   const descServ   = document.getElementById('c-desc').value     || '';
   const lineaServ  = lineaNombre();
-  const vigencia   = document.getElementById('c-vigencia').value || '15';
+  const vigencia   = document.getElementById('c-vigencia').value || DEFAULT_CFG.vigenciaDefault;
+  const vigenciaText = getVigenciaTexto();
+  const anticipoText = getAnticipoTexto();
   const responsable= cfg.responsable || DEFAULT_CFG.responsable;
   const tel        = cfg.tel   || DEFAULT_CFG.tel;
   const email      = cfg.email || DEFAULT_CFG.email;
   const web        = cfg.web   || DEFAULT_CFG.web;
   const ubicacion  = document.getElementById('c-ubicacion') ? document.getElementById('c-ubicacion').value || 'Por definir' : 'Por definir';
-  const obsText    = cfg.obs   || `Vigencia de cotización: ${vigencia} días naturales.\nTiempo estimado de ejecución sujeto a condiciones de acceso, horarios permitidos, disponibilidad de materiales, tiempos de secado y hallazgos durante la intervención.\nCualquier trabajo adicional deberá ser autorizado por el cliente antes de ejecutarse.\nLa mano de obra queda respaldada sobre los trabajos ejecutados. No cubre fallas derivadas de instalaciones existentes ocultas, materiales preexistentes deteriorados, humedad activa, mal uso o movimientos posteriores.`;
+  const obsText    = aplicarVariablesObs(cfg.obs || DEFAULT_CFG.obs, vigenciaText, anticipoText);
 
   // ============================================================
   // HELPER: draw the ArreglaYa lightning-bolt "A" logo in SVG-like style
@@ -984,6 +1094,7 @@ async function generarPDF(openWA) {
   const leftRows = [
     ['EMPRESA:', cliente],
     ['SERVICIO:', descServ || 'Por definir'],
+    ['LÍNEA:', lineaServ],
     ['UBICACIÓN:', ubicacion],
   ];
 
@@ -1239,9 +1350,7 @@ async function generarPDF(openWA) {
     showToast('✓ PDF descargado: ' + filename);
   }
 
-  // Increment folio
-  folioNum++;
-  try { cfg.folioNum = folioNum; localStorage.setItem('ay_cfg', JSON.stringify(cfg)); } catch(e) {}
+  markCurrentFolioUsed();
 }
 
 // ==================== WHATSAPP ====================
@@ -1251,7 +1360,8 @@ function buildWAMsg() {
   const folio   = document.getElementById('c-folio').value || 'COT-001';
   const fecha   = document.getElementById('c-fecha').value;
   const desc    = document.getElementById('c-desc').value;
-  const vigencia = document.getElementById('c-vigencia').value || '15';
+  const vigenciaText = getVigenciaTexto();
+  const anticipoText = getAnticipoTexto();
   const tel     = cfg.tel || DEFAULT_CFG.tel;
   const web     = cfg.web || DEFAULT_CFG.web;
   const nivelNombre = lineaNombre();
@@ -1273,7 +1383,8 @@ function buildWAMsg() {
   });
   msg += `\n━━━━━━━━━━━━━━━━━━━━\n`;
   msg += `Subtotal:    ${fmtWA(sub)}\nIVA 16%:     ${fmtWA(iva)}\n*TOTAL:      ${fmtWA(tot)}*\n`;
-  msg += `\n_Vigencia: ${vigencia} días naturales_\n`;
+  msg += `\n_Vigencia: ${vigenciaText}_\n`;
+  msg += `_Condición: ${anticipoText}_\n`;
   msg += `_${empresa}`;
   if (tel) msg += ` · ${tel}`;
   if (web) msg += ` · ${web}`;
@@ -1284,6 +1395,60 @@ function buildWAMsg() {
 function enviarWA() {
   if (!items.length) { showToast('⚠️ La cotización está vacía'); return; }
   window.open(`https://wa.me/?text=${encodeURIComponent(buildWAMsg())}`, '_blank');
+  markCurrentFolioUsed();
+}
+
+// ==================== FOLIOS / NUEVA COTIZACIÓN ====================
+function getFolioNumber(folio) {
+  const m = String(folio || '').match(/(\d+)/g);
+  return m ? parseInt(m[m.length - 1], 10) : 0;
+}
+
+function setNextFolio() {
+  document.getElementById('c-folio').value = 'COT-' + String(folioNum).padStart(3,'0');
+  folioMarcado = false;
+}
+
+function markCurrentFolioUsed() {
+  if (folioMarcado) return;
+  const actual = getFolioNumber(document.getElementById('c-folio').value);
+  if (actual) folioNum = Math.max(folioNum, actual + 1);
+  else folioNum++;
+  cfg.folioNum = folioNum;
+  try { localStorage.setItem('ay_cfg', JSON.stringify(cfg)); } catch(e) {}
+  folioMarcado = true;
+}
+
+function nuevaCotizacion() {
+  if (items.length && !folioMarcado) markCurrentFolioUsed();
+  items = [];
+  nextId = 1;
+  ['c-cliente','c-desc','c-ubicacion'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const hoy = new Date();
+  document.getElementById('c-fecha').value = hoy.toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'});
+  setNextFolio();
+  document.getElementById('c-linea').value = lineaNombre();
+  setSelectValue('c-vigencia', cfg.vigenciaDefault || DEFAULT_CFG.vigenciaDefault);
+  setSelectValue('c-anticipo', cfg.anticipoDefault || DEFAULT_CFG.anticipoDefault);
+  renderCot();
+  updateBadge();
+  showView('cat');
+  showToast('✓ Nueva cotización lista');
+}
+
+function getVigenciaTexto() {
+  const v = document.getElementById('c-vigencia')?.value || DEFAULT_CFG.vigenciaDefault;
+  return `${v} días naturales`;
+}
+
+function getAnticipoTexto() {
+  return document.getElementById('c-anticipo')?.value || DEFAULT_CFG.anticipoDefault;
+}
+
+function aplicarVariablesObs(text, vigenciaText, anticipoText) {
+  return String(text || DEFAULT_CFG.obs)
+    .replaceAll('{vigencia}', vigenciaText)
+    .replaceAll('{anticipo}', anticipoText);
 }
 
 // ==================== VIEWS ====================
@@ -1296,6 +1461,13 @@ function showView(v) {
 }
 
 // ==================== UTIL ====================
+function setSelectValue(id, value) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const exists = [...el.options].some(o => o.value === value);
+  if (exists) el.value = value;
+}
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
 function fmt(n) { return '$' + Math.round(n).toLocaleString('es-MX'); }
 function fmtN(n) { return '$' + Math.round(n).toLocaleString('es-MX'); }
 function fmtWA(n) { return '$' + Math.round(n).toLocaleString('es-MX'); }

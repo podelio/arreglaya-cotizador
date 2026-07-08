@@ -1,29 +1,24 @@
-# ArreglaYa Cotizador V3.2
+# ArreglaYa Cotizador V3.3
 
 Cambios principales:
 
-- Selector superior: Residencial / Comercial / Industrial.
-- Catálogo compatible con columnas: Sell_Residencial, Sell_Comercial, Sell_Industrial.
-- Ítem manual con opción “Registrar como sugerencia para catálogo”.
-- Campo de configuración para URL Web App de Google Apps Script.
-- Feedback manual hacia hoja FEEDBACK_MANUAL.
-
-## Publicación del catálogo
-
-En Google Sheets:
-
-1. Hoja CATALOG.
-2. Archivo → Compartir → Publicar en la web.
-3. Seleccionar CATALOG y CSV.
-4. Copiar el enlace publicado CSV.
-5. Pegar en la app: Config → ID del Google Sheet o enlace CSV publicado.
+- Vigencia ahora es lista desplegable.
+- Anticipo ahora es lista desplegable.
+- Las observaciones del PDF usan variables: `{vigencia}` y `{anticipo}`.
+- Categoría sugerida del ítem manual ahora es lista desplegable.
+- Feedback manual usa envío por formulario oculto para funcionar mejor con Google Apps Script.
+- Botón “Probar registro de feedback”.
+- Botón “Nueva cotización / siguiente folio”.
+- Folio se guarda como usado al generar PDF o enviar WhatsApp y la siguiente cotización toma el folio siguiente.
 
 ## Feedback manual
 
-1. Abre el Google Sheet del catálogo.
-2. Extensiones → Apps Script.
-3. Pega el contenido de apps_script_feedback.gs.
-4. Implementar/Deploy → Nueva implementación → Web App.
-5. Ejecutar como: Yo.
-6. Acceso: Cualquier persona / Anyone.
-7. Copiar URL /exec y pegar en la app: Config → URL Web App para feedback manual.
+1. Abre tu Google Sheet del catálogo.
+2. Ve a Extensiones → Apps Script.
+3. Pega `apps_script_feedback.gs`.
+4. Implementar → Nueva implementación → Web App.
+5. Ejecutar como: Tú.
+6. Acceso: Cualquier persona.
+7. Copia la URL que termina en `/exec`.
+8. Pégala en Config → URL Web App para feedback manual.
+9. Usa “Probar registro de feedback”.

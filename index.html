@@ -206,9 +206,9 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
       </button>
     </div>
     <div class="nivel-sel">
-      <button class="nv" data-n="eco" onclick="setNivel('eco')">Económico</button>
-      <button class="nv active" data-n="std" onclick="setNivel('std')">Estándar</button>
-      <button class="nv" data-n="pre" onclick="setNivel('pre')">Premium</button>
+      <button class="nv" data-n="res" onclick="setNivel('res')">Residencial</button>
+      <button class="nv active" data-n="com" onclick="setNivel('com')">Comercial</button>
+      <button class="nv" data-n="ind" onclick="setNivel('ind')">Industrial</button>
     </div>
   </div>
 
@@ -265,6 +265,14 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
           <div class="fr"><label>Precio unit.</label><input type="number" id="m-precio" placeholder="0.00" min="0"></div>
           <div class="fr"><label>Unidad</label><input type="text" id="m-unidad" placeholder="serv"></div>
         </div>
+        <div class="fgrid" style="grid-template-columns:1fr 1fr;">
+          <div class="fr"><label>Categoría sugerida</label><input type="text" id="m-cat-sug" placeholder="Ej: Electricidad"></div>
+          <div class="fr"><label>Observación interna</label><input type="text" id="m-obs" placeholder="Ej: revisar para catálogo"></div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--tx2);margin:4px 0 12px;">
+          <input type="checkbox" id="m-feedback" checked style="width:18px;height:18px;accent-color:var(--or);">
+          Registrar como sugerencia para catálogo
+        </label>
         <button class="btn-submit" onclick="agregarManual()">Agregar a cotización</button>
       </div>
       <div style="height:16px"></div>
@@ -278,6 +286,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
           <div><div class="cot-lbl">Folio</div><input class="cot-inp" id="c-folio" type="text" placeholder="COT-001"></div>
         </div>
         <div style="margin-bottom:8px"><div class="cot-lbl">Servicio / Descripción</div><input class="cot-inp" id="c-desc" type="text" placeholder="Ej: Mantenimiento correctivo oficinas"></div>
+        <div style="margin-bottom:8px"><div class="cot-lbl">Línea de servicio seleccionada</div><input class="cot-inp" id="c-linea" type="text" readonly></div>
         <div class="cot-hdr-grid" style="margin-bottom:8px">
           <div><div class="cot-lbl">Ubicación</div><input class="cot-inp" id="c-ubicacion" type="text" placeholder="Ej: Monterrey, N.L."></div>
           <div><div class="cot-lbl">Fecha</div><input class="cot-inp" id="c-fecha" type="text" readonly></div>
@@ -331,6 +340,11 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
           <input type="text" id="cfg-sheet-tab" placeholder="CATALOG" value="CATALOG">
           <div class="hint-text">El nombre exacto del tab donde están los servicios</div>
         </div>
+        <div class="cfg-field">
+          <label>URL Web App para feedback manual</label>
+          <input type="text" id="cfg-feedback-url" placeholder="https://script.google.com/macros/s/.../exec">
+          <div class="hint-text">Opcional. Pega aquí la URL del Apps Script para guardar ítems manuales en FEEDBACK_MANUAL.</div>
+        </div>
       </div>
 
       <div class="cfg-sec">
@@ -352,6 +366,16 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 
       <div style="padding:0 16px 16px">
         <button class="cfg-save" onclick="guardarConfig()">Guardar y sincronizar catálogo</button>
+      </div>
+
+      <div class="cfg-sec">
+        <div class="cfg-sec-title">📝 Feedback de ítems manuales</div>
+        <div class="steps-box">
+          <div class="step-row"><div class="step-num">1</div><div class="step-txt">En tu Google Sheet crea o conserva la hoja <strong>FEEDBACK_MANUAL</strong>.</div></div>
+          <div class="step-row"><div class="step-num">2</div><div class="step-txt">Pega el código de <strong>apps_script_feedback.gs</strong> en Apps Script.</div></div>
+          <div class="step-row"><div class="step-num">3</div><div class="step-txt">Despliega como <strong>Web App</strong> y copia la URL terminada en <strong>/exec</strong>.</div></div>
+          <div class="step-row"><div class="step-num">4</div><div class="step-txt">Pega esa URL en el campo anterior para registrar sugerencias desde la app.</div></div>
+        </div>
       </div>
 
       <div class="cfg-sec">
@@ -396,40 +420,40 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 <script>
 // ==================== CATÁLOGO BASE ====================
 const BASE_CATALOG = [
-  {code:"AZU-COLO",name:"Colocación de azulejo (solo m.o.)",unit:"m2",cat:"Acabados",eco:329.99,std:389.99,pre:476.67},
-  {code:"DEM-AZU",name:"Demolición de azulejo + retiro",unit:"m2",cat:"Construcción",eco:253.84,std:299.99,pre:366.65},
-  {code:"DEM-MURO",name:"Demolición de muros (block + retiro)",unit:"m2",cat:"Construcción",eco:296.15,std:349.99,pre:427.77},
-  {code:"DRY-RH",name:"Muro tablaroca RH doble cara",unit:"m2",cat:"Construcción",eco:355.38,std:419.99,pre:513.32},
-  {code:"ELE-APAG",name:"Cambio / instalación de apagador sencillo",unit:"pza",cat:"Electricidad",eco:286.83,std:338.98,pre:414.31},
-  {code:"ELE-CONTACT-INT",name:"Cambio de contacto dúplex interior con tapa",unit:"pza",cat:"Electricidad",eco:330.31,std:390.36,pre:477.11},
-  {code:"ELE-CONTACT-EXT",name:"Instalación de contacto exterior con cubierta",unit:"pza",cat:"Electricidad",eco:441.57,std:521.85,pre:637.82},
-  {code:"ELE-CANAL-EXP",name:"Canalización expuesta (conduit/tubo)",unit:"ml",cat:"Electricidad",eco:152.30,std:179.99,pre:219.99},
-  {code:"ELE-CANAL-OCU",name:"Canalización oculta (ranura + resane)",unit:"ml",cat:"Electricidad",eco:270.77,std:319.99,pre:391.11},
-  {code:"ELE-TABL",name:"Centro de carga / tablero",unit:"pza",cat:"Electricidad",eco:1522.96,std:1799.86,pre:2199.83},
-  {code:"ELE-FALLA",name:"Corrección de fallas y cortos",unit:"serv",cat:"Electricidad",eco:1015.45,std:1200.08,pre:1466.76},
-  {code:"ELE-PUNTO",name:"Punto eléctrico básico (contacto/lámpara)",unit:"pza",cat:"Electricidad",eco:380.77,std:449.99,pre:549.99},
-  {code:"ELE-PUNTO-COMP",name:"Punto eléctrico completo (canal.+cable+disp.)",unit:"pza",cat:"Electricidad",eco:719.24,std:850.01,pre:1038.91},
-  {code:"ELE-CABL",name:"Sustitución de cableado (incluye tendido)",unit:"ml",cat:"Electricidad",eco:101.53,std:119.99,pre:146.66},
-  {code:"ELE-PROT",name:"Protección eléctrica y mantenimiento",unit:"serv",cat:"Electricidad",eco:1523.05,std:1799.97,pre:2199.97},
-  {code:"ELE-FOCO",name:"Cambio de foco / bombilla en punto existente",unit:"pza",cat:"Iluminación",eco:173.85,std:205.45,pre:251.11},
-  {code:"ELE-LUM",name:"Instalación / cambio de luminaria sencilla",unit:"pza",cat:"Iluminación",eco:399.85,std:472.55,pre:577.56},
-  {code:"ELE-LED",name:"Instalación de iluminación LED (punto)",unit:"pza",cat:"Iluminación",eco:380.77,std:449.99,pre:549.99},
-  {code:"ELE-DECO",name:"Iluminación decorativa",unit:"pza",cat:"Iluminación",eco:550.01,std:650.01,pre:794.45},
-  {code:"ELE-IND",name:"Iluminación industrial y de altura",unit:"pza",cat:"Iluminación",eco:1015.40,std:1200.02,pre:1466.69},
-  {code:"ELE-SUST-LUM",name:"Sustitución de luminarias",unit:"pza",cat:"Iluminación",eco:423.09,std:500.01,pre:611.12},
-  {code:"IMPER",name:"Impermeabilización (manto / acrílico)",unit:"m2",cat:"Impermeabilización",eco:194.62,std:230.01,pre:281.12},
-  {code:"RES-HUM",name:"Resane por humedad (sellado + resanador)",unit:"m2",cat:"Impermeabilización",eco:156.53,std:184.99,pre:226.09},
-  {code:"PNT-INT",name:"Pintura interior (muros / plafón)",unit:"m2",cat:"Pintura",eco:80.38,std:95.00,pre:116.11},
-  {code:"PNT-EXT",name:"Pintura exterior",unit:"m2",cat:"Pintura",eco:109.99,std:129.99,pre:158.87},
-  {code:"PLO-PVC",name:'Drenaje PVC sanitario 2" instalado',unit:"ml",cat:"Plomería",eco:279.24,std:330.01,pre:403.34},
-  {code:"PLO-CPVC",name:'Tubería CPVC 1/2" instalada',unit:"ml",cat:"Plomería",eco:236.93,std:280.01,pre:342.23},
-  {code:"WC-INST",name:"Instalación de WC",unit:"pza",cat:"Plomería",eco:2030.61,std:2399.81,pre:2933.10},
-  {code:"LAV-REU",name:"Reubicación de lavabo (empotrado)",unit:"pza",cat:"Plomería",eco:2622.82,std:3099.70,pre:3788.52},
-  {code:"PLO-TINACO-INST",name:"Instalación de tinaco 750-1100 L",unit:"serv",cat:"Plomería",eco:2369.60,std:2800.44,pre:3422.76},
-  {code:"PLO-TINACO-CONEX",name:"Conexión básica de tinaco a línea exist.",unit:"serv",cat:"Plomería",eco:1522.89,std:1799.78,pre:2199.73},
-  {code:"VENT-EXTR",name:"Instalación de extractor + ductería básica",unit:"pza",cat:"Ventilación",eco:2115.36,std:2499.97,pre:3055.52},
-  {code:"CER-CHAPA",name:"Instalación o cambio de chapa sencilla",unit:"pza",cat:"Carpintería",eco:549.35,std:649.24,pre:793.51},
-  {code:"GEN-VISITA",name:"Visita mínima / paquete trabajos pequeños",unit:"serv",cat:"General",eco:801.80,std:947.58,pre:1158.16},
+  {code:"AZU-COLO",name:"Colocación de azulejo (solo m.o.)",unit:"m2",cat:"Acabados",res:329.99,com:389.99,ind:476.67},
+  {code:"DEM-AZU",name:"Demolición de azulejo + retiro",unit:"m2",cat:"Construcción",res:253.84,com:299.99,ind:366.65},
+  {code:"DEM-MURO",name:"Demolición de muros (block + retiro)",unit:"m2",cat:"Construcción",res:296.15,com:349.99,ind:427.77},
+  {code:"DRY-RH",name:"Muro tablaroca RH doble cara",unit:"m2",cat:"Construcción",res:355.38,com:419.99,ind:513.32},
+  {code:"ELE-APAG",name:"Cambio / instalación de apagador sencillo",unit:"pza",cat:"Electricidad",res:286.83,com:338.98,ind:414.31},
+  {code:"ELE-CONTACT-INT",name:"Cambio de contacto dúplex interior con tapa",unit:"pza",cat:"Electricidad",res:330.31,com:390.36,ind:477.11},
+  {code:"ELE-CONTACT-EXT",name:"Instalación de contacto exterior con cubierta",unit:"pza",cat:"Electricidad",res:441.57,com:521.85,ind:637.82},
+  {code:"ELE-CANAL-EXP",name:"Canalización expuesta (conduit/tubo)",unit:"ml",cat:"Electricidad",res:152.30,com:179.99,ind:219.99},
+  {code:"ELE-CANAL-OCU",name:"Canalización oculta (ranura + resane)",unit:"ml",cat:"Electricidad",res:270.77,com:319.99,ind:391.11},
+  {code:"ELE-TABL",name:"Centro de carga / tablero",unit:"pza",cat:"Electricidad",res:1522.96,com:1799.86,ind:2199.83},
+  {code:"ELE-FALLA",name:"Corrección de fallas y cortos",unit:"serv",cat:"Electricidad",res:1015.45,com:1200.08,ind:1466.76},
+  {code:"ELE-PUNTO",name:"Punto eléctrico básico (contacto/lámpara)",unit:"pza",cat:"Electricidad",res:380.77,com:449.99,ind:549.99},
+  {code:"ELE-PUNTO-COMP",name:"Punto eléctrico completo (canal.+cable+disp.)",unit:"pza",cat:"Electricidad",res:719.24,com:850.01,ind:1038.91},
+  {code:"ELE-CABL",name:"Sustitución de cableado (incluye tendido)",unit:"ml",cat:"Electricidad",res:101.53,com:119.99,ind:146.66},
+  {code:"ELE-PROT",name:"Protección eléctrica y mantenimiento",unit:"serv",cat:"Electricidad",res:1523.05,com:1799.97,ind:2199.97},
+  {code:"ELE-FOCO",name:"Cambio de foco / bombilla en punto existente",unit:"pza",cat:"Iluminación",res:173.85,com:205.45,ind:251.11},
+  {code:"ELE-LUM",name:"Instalación / cambio de luminaria sencilla",unit:"pza",cat:"Iluminación",res:399.85,com:472.55,ind:577.56},
+  {code:"ELE-LED",name:"Instalación de iluminación LED (punto)",unit:"pza",cat:"Iluminación",res:380.77,com:449.99,ind:549.99},
+  {code:"ELE-DECO",name:"Iluminación decorativa",unit:"pza",cat:"Iluminación",res:550.01,com:650.01,ind:794.45},
+  {code:"ELE-IND",name:"Iluminación industrial y de altura",unit:"pza",cat:"Iluminación",res:1015.40,com:1200.02,ind:1466.69},
+  {code:"ELE-SUST-LUM",name:"Sustitución de luminarias",unit:"pza",cat:"Iluminación",res:423.09,com:500.01,ind:611.12},
+  {code:"IMPER",name:"Impermeabilización (manto / acrílico)",unit:"m2",cat:"Impermeabilización",res:194.62,com:230.01,ind:281.12},
+  {code:"RES-HUM",name:"Resane por humedad (sellado + resanador)",unit:"m2",cat:"Impermeabilización",res:156.53,com:184.99,ind:226.09},
+  {code:"PNT-INT",name:"Pintura interior (muros / plafón)",unit:"m2",cat:"Pintura",res:80.38,com:95.00,ind:116.11},
+  {code:"PNT-EXT",name:"Pintura exterior",unit:"m2",cat:"Pintura",res:109.99,com:129.99,ind:158.87},
+  {code:"PLO-PVC",name:'Drenaje PVC sanitario 2" instalado',unit:"ml",cat:"Plomería",res:279.24,com:330.01,ind:403.34},
+  {code:"PLO-CPVC",name:'Tubería CPVC 1/2" instalada',unit:"ml",cat:"Plomería",res:236.93,com:280.01,ind:342.23},
+  {code:"WC-INST",name:"Instalación de WC",unit:"pza",cat:"Plomería",res:2030.61,com:2399.81,ind:2933.10},
+  {code:"LAV-REU",name:"Reubicación de lavabo (empotrado)",unit:"pza",cat:"Plomería",res:2622.82,com:3099.70,ind:3788.52},
+  {code:"PLO-TINACO-INST",name:"Instalación de tinaco 750-1100 L",unit:"serv",cat:"Plomería",res:2369.60,com:2800.44,ind:3422.76},
+  {code:"PLO-TINACO-CONEX",name:"Conexión básica de tinaco a línea exist.",unit:"serv",cat:"Plomería",res:1522.89,com:1799.78,ind:2199.73},
+  {code:"VENT-EXTR",name:"Instalación de extractor + ductería básica",unit:"pza",cat:"Ventilación",res:2115.36,com:2499.97,ind:3055.52},
+  {code:"CER-CHAPA",name:"Instalación o cambio de chapa sencilla",unit:"pza",cat:"Carpintería",res:549.35,com:649.24,ind:793.51},
+  {code:"GEN-VISITA",name:"Visita mínima / paquete trabajos pequeños",unit:"serv",cat:"General",res:801.80,com:947.58,ind:1158.16},
 ];
 
 
@@ -438,7 +462,7 @@ const AY_LOGO_PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQAAAEnCAYAA
 
 // ==================== STATE ====================
 let catalog = [...BASE_CATALOG];
-let nivel = 'std';
+let nivel = 'com';
 let activeCat = '';
 let items = [];
 let nextId = 1;
@@ -462,6 +486,7 @@ function init() {
   const hoy = new Date();
   document.getElementById('c-fecha').value = hoy.toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'});
   document.getElementById('c-folio').value = 'COT-' + String(folioNum).padStart(3,'0');
+  document.getElementById('c-linea').value = lineaNombre();
   buildCats();
   // Auto-sync if sheet ID configured
   if (cfg.sheetId) setTimeout(syncSheets, 500);
@@ -475,6 +500,7 @@ function loadConfig() {
   cfg = { ...DEFAULT_CFG, ...cfg };
   // Populate fields
   if (cfg.sheetId) document.getElementById('cfg-sheet-id').value = cfg.sheetId;
+  if (cfg.feedbackUrl) document.getElementById('cfg-feedback-url').value = cfg.feedbackUrl;
   if (cfg.sheetTab) document.getElementById('cfg-sheet-tab').value = cfg.sheetTab;
   if (cfg.empresa) document.getElementById('cfg-empresa').value = cfg.empresa;
   if (cfg.responsable) document.getElementById('cfg-responsable').value = cfg.responsable;
@@ -490,6 +516,7 @@ function guardarConfig() {
   cfg = {
     sheetId: document.getElementById('cfg-sheet-id').value.trim(),
     sheetTab: document.getElementById('cfg-sheet-tab').value.trim() || 'CATALOG',
+    feedbackUrl: document.getElementById('cfg-feedback-url').value.trim(),
     empresa: document.getElementById('cfg-empresa').value.trim(),
     responsable: document.getElementById('cfg-responsable').value.trim(),
     tel: document.getElementById('cfg-tel').value.trim(),
@@ -629,26 +656,26 @@ function parseSheetCSV(text) {
   const nameI   = ['servicio','service','nombre'].map(ci).find(x => x >= 0) ?? -1;
   const catI    = ['categoría','categoria','category','clasificacion'].map(ci).find(x => x >= 0) ?? -1;
   const unitI   = ['unidad','unit','units'].map(ci).find(x => x >= 0) ?? -1;
-  const ecoI    = ['sell_económico','sell_economico','economico','eco'].map(ci).find(x => x >= 0) ?? -1;
-  const stdI    = ['sell_estándar','sell_estandar','estándar','estandar','std'].map(ci).find(x => x >= 0) ?? -1;
-  const preI    = ['sell_premium','premium','pre'].map(ci).find(x => x >= 0) ?? -1;
+  const resI    = ['sell_residencial','residencial','sell_económico','sell_economico','economico','eco'].map(ci).find(x => x >= 0) ?? -1;
+  const comI    = ['sell_comercial','comercial','sell_estándar','sell_estandar','estándar','estandar','std'].map(ci).find(x => x >= 0) ?? -1;
+  const indI    = ['sell_industrial','industrial','sell_premium','premium','pre'].map(ci).find(x => x >= 0) ?? -1;
 
   const results = [];
   for (let i = headerIdx + 1; i < lines.length; i++) {
     const row = parseCSVRow(lines[i]);
     if (!row.length || !row[codeI]) continue;
-    const eco = toNumber(row[ecoI]) || 0;
-    const std = toNumber(row[stdI]) || 0;
-    const pre = toNumber(row[preI]) || 0;
-    if (!std && !eco && !pre) continue;
+    const res = toNumber(row[resI]) || 0;
+    const com = toNumber(row[comI]) || 0;
+    const ind = toNumber(row[indI]) || 0;
+    if (!com && !res && !ind) continue;
     results.push({
       code: row[codeI] || '',
       name: (nameI >= 0 ? row[nameI] : '') || row[codeI],
       cat:  (catI >= 0 ? row[catI] : '') || 'General',
       unit: (unitI >= 0 ? row[unitI] : '') || 'serv',
-      eco:  eco || std,
-      std:  std || eco,
-      pre:  pre || std,
+      res:  res || com,
+      com:  com || res,
+      ind:  ind || com || res,
     });
   }
   return results;
@@ -690,7 +717,7 @@ function buildCats() {
     cats.map(c => `<button class="cc ${c===active?'active':''}" data-c="${c}" onclick="setCat('${c}')">${c}</button>`).join('');
 }
 
-function gp(s) { return nivel==='eco'?s.eco:nivel==='pre'?s.pre:s.std; }
+function gp(s) { return nivel==='res'?s.res:nivel==='ind'?s.ind:s.com; }
 
 function onSearch(q) { renderResults(q); }
 function onFocus() {
@@ -707,9 +734,15 @@ function setCat(c) {
   document.getElementById('hint-start').style.display = 'none';
   renderResults(document.getElementById('si').value);
 }
+function lineaNombre() {
+  return nivel === 'res' ? 'Residencial' : nivel === 'ind' ? 'Industrial' : 'Comercial';
+}
+
 function setNivel(n) {
   nivel = n;
   document.querySelectorAll('.nv').forEach(b => b.classList.toggle('active', b.dataset.n === n));
+  const lineaInput = document.getElementById('c-linea');
+  if (lineaInput) lineaInput.value = lineaNombre();
   renderResults(document.getElementById('si').value);
   if (modalSvc) updModalPrice();
 }
@@ -777,7 +810,7 @@ function closeModalClick(e) { if (e.target === document.getElementById('modal'))
 function confirmAdd() {
   if (!modalSvc) return;
   const qty = parseFloat(document.getElementById('mq').value) || 1;
-  items.push({ id: nextId++, desc: modalSvc.name, unit: modalSvc.unit, cant: qty, precio: gp(modalSvc), cat: modalSvc.cat });
+  items.push({ id: nextId++, desc: modalSvc.name, unit: modalSvc.unit, cant: qty, precio: gp(modalSvc), cat: modalSvc.cat, linea: lineaNombre(), manual: false });
   document.getElementById('modal').classList.remove('open');
   modalSvc = null;
   renderCot(); updateBadge();
@@ -791,16 +824,53 @@ function agregarManual() {
   const cant = parseFloat(document.getElementById('m-cant').value) || 1;
   const precio = parseFloat(document.getElementById('m-precio').value) || 0;
   const unit = document.getElementById('m-unidad').value.trim() || 'serv';
+  const catSug = document.getElementById('m-cat-sug').value.trim() || 'Manual';
+  const obs = document.getElementById('m-obs').value.trim();
+  const registrar = document.getElementById('m-feedback').checked;
   if (!desc) { showToast('⚠️ Escribe una descripción'); return; }
   if (!precio) { showToast('⚠️ Escribe un precio unitario'); return; }
-  items.push({ id: nextId++, desc, unit, cant, precio, cat: 'Manual' });
+  const item = { id: nextId++, desc, unit, cant, precio, cat: catSug, linea: lineaNombre(), manual: true, obs };
+  items.push(item);
+  if (registrar && cfg.feedbackUrl) enviarFeedbackManual(item);
   document.getElementById('m-desc').value = '';
   document.getElementById('m-precio').value = '';
   document.getElementById('m-unidad').value = '';
   document.getElementById('m-cant').value = 1;
+  document.getElementById('m-cat-sug').value = '';
+  document.getElementById('m-obs').value = '';
   renderCot(); updateBadge();
-  showToast('✓ Ítem agregado');
+  showToast(registrar && cfg.feedbackUrl ? '✓ Ítem agregado y enviado a feedback' : '✓ Ítem agregado');
   showView('cot');
+}
+
+async function enviarFeedbackManual(item) {
+  if (!cfg.feedbackUrl) {
+    showToast('ℹ Ítem agregado. Configura URL de feedback para registrarlo en Sheets.');
+    return;
+  }
+  const payload = {
+    timestamp: new Date().toISOString(),
+    folio: document.getElementById('c-folio').value || '',
+    cliente: document.getElementById('c-cliente').value || '',
+    linea: item.linea || lineaNombre(),
+    categoria: item.cat || 'Manual',
+    servicioManual: item.desc,
+    unidad: item.unit,
+    cantidad: item.cant,
+    precioUnitario: item.precio,
+    importe: item.cant * item.precio,
+    observaciones: item.obs || ''
+  };
+  try {
+    await fetch(cfg.feedbackUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+  } catch(e) {
+    console.warn('No se pudo enviar feedback manual', e);
+  }
 }
 
 // ==================== COTIZACIÓN ====================
@@ -859,6 +929,7 @@ async function generarPDF(openWA) {
   const folio      = document.getElementById('c-folio').value    || 'COT-001';
   const fecha      = document.getElementById('c-fecha').value;
   const descServ   = document.getElementById('c-desc').value     || '';
+  const lineaServ  = lineaNombre();
   const vigencia   = document.getElementById('c-vigencia').value || '15';
   const responsable= cfg.responsable || DEFAULT_CFG.responsable;
   const tel        = cfg.tel   || DEFAULT_CFG.tel;
@@ -1183,7 +1254,7 @@ function buildWAMsg() {
   const vigencia = document.getElementById('c-vigencia').value || '15';
   const tel     = cfg.tel || DEFAULT_CFG.tel;
   const web     = cfg.web || DEFAULT_CFG.web;
-  const nivelNombre = nivel === 'eco' ? 'Económico' : nivel === 'pre' ? 'Premium' : 'Estándar';
+  const nivelNombre = lineaNombre();
   const sub = items.reduce((s, x) => s + x.cant * x.precio, 0);
   const iva = sub * 0.16;
   const tot = sub + iva;
@@ -1193,7 +1264,7 @@ function buildWAMsg() {
   msg += `📋 *Folio:* ${folio}\n`;
   msg += `👤 *Cliente:* ${cliente}\n`;
   msg += `📅 *Fecha:* ${fecha}\n`;
-  msg += `🏷 *Nivel:* ${nivelNombre}\n`;
+  msg += `🏷 *Línea:* ${nivelNombre}\n`;
   if (desc) msg += `🔧 *Servicio:* ${desc}\n`;
   msg += `\n*PARTIDAS*\n`;
   items.forEach((item, i) => {

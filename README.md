@@ -1,37 +1,29 @@
-# ArreglaYa Cotizador — PWA
+# ArreglaYa Cotizador V3.2
 
-Esta carpeta contiene la app lista para subir a GitHub Pages.
+Cambios principales:
 
-## Archivos incluidos
+- Selector superior: Residencial / Comercial / Industrial.
+- Catálogo compatible con columnas: Sell_Residencial, Sell_Comercial, Sell_Industrial.
+- Ítem manual con opción “Registrar como sugerencia para catálogo”.
+- Campo de configuración para URL Web App de Google Apps Script.
+- Feedback manual hacia hoja FEEDBACK_MANUAL.
 
-- `index.html`: app principal.
-- `manifest.json`: permite instalarla como app en celular.
-- `sw.js`: cache local para abrir más rápido y poder cargar aun con señal limitada.
-- `icon-192.png` y `icon-512.png`: íconos de instalación.
-- `.nojekyll`: evita procesamiento innecesario en GitHub Pages.
+## Publicación del catálogo
 
-## Cómo subir a GitHub Pages
+En Google Sheets:
 
-1. Entra a GitHub y crea un repositorio nuevo, por ejemplo: `arreglaya-cotizador`.
-2. Sube todos los archivos de esta carpeta a la raíz del repositorio. El archivo principal debe llamarse exactamente `index.html`.
-3. En el repositorio entra a `Settings` → `Pages`.
-4. En `Build and deployment`, selecciona `Deploy from a branch`.
-5. En `Branch`, selecciona `main` y carpeta `/root`, luego guarda.
-6. Espera unos minutos. GitHub te mostrará una liga tipo `https://usuario.github.io/arreglaya-cotizador/`.
-7. Abre esa liga en tu celular.
+1. Hoja CATALOG.
+2. Archivo → Compartir → Publicar en la web.
+3. Seleccionar CATALOG y CSV.
+4. Copiar el enlace publicado CSV.
+5. Pegar en la app: Config → ID del Google Sheet o enlace CSV publicado.
 
-## Instalar en celular
+## Feedback manual
 
-### Android / Chrome
-
-Abre la liga, toca el menú `⋮` y selecciona `Agregar a pantalla principal` o `Instalar app`.
-
-### iPhone / Safari
-
-Abre la liga en Safari, toca `Compartir` y selecciona `Agregar a inicio`.
-
-## Notas
-
-- La app funciona como cotizador rápido y envía el texto por WhatsApp.
-- Las partidas se guardan localmente en el navegador del celular mediante `localStorage`.
-- Esta versión no genera PDF/Word todavía; eso se puede agregar en una siguiente fase.
+1. Abre el Google Sheet del catálogo.
+2. Extensiones → Apps Script.
+3. Pega el contenido de apps_script_feedback.gs.
+4. Implementar/Deploy → Nueva implementación → Web App.
+5. Ejecutar como: Yo.
+6. Acceso: Cualquier persona / Anyone.
+7. Copiar URL /exec y pegar en la app: Config → URL Web App para feedback manual.

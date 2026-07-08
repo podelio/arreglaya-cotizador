@@ -1,4 +1,4 @@
-const CACHE='arreglaya-cotizador-v3-1';
+const CACHE='arreglaya-cotizador-v3-2';
 const ASSETS=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -14,8 +14,8 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // No cachear Google Sheets para que siempre traiga precios actualizados.
-  if (url.hostname.includes('docs.google.com')) {
+  // No cachear fuentes dinámicas para que siempre traiga precios y feedback actualizados.
+  if (url.hostname.includes('docs.google.com') || url.hostname.includes('script.google.com')) {
     e.respondWith(fetch(e.request));
     return;
   }

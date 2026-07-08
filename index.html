@@ -6,589 +6,722 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ArreglaYa">
-<meta name="theme-color" content="#E8650A">
-<meta name="description" content="Cotizador rápido de servicios ArreglaYa para generar partidas y enviarlas por WhatsApp.">
+<meta name="theme-color" content="#6A1B9A">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-
-<title>ArreglaYa · Cotizador</title>
+<title>ArreglaYa · Cotizador V3</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  :root {
-    --orange: #E8650A;
-    --orange-light: #FFF0E8;
-    --orange-dark: #C4520A;
-    --text: #1A1A1A;
-    --text-2: #6B6B6B;
-    --text-3: #9E9E9E;
-    --bg: #F5F4F2;
-    --surface: #FFFFFF;
-    --border: #E8E6E2;
-    --border-strong: #D0CEC9;
-    --green: #1A8C4E;
-    --green-bg: #E8F5EE;
-    --red: #C0392B;
-    --red-bg: #FDEAEA;
-    --radius: 12px;
-    --radius-sm: 8px;
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
-  }
-  html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --or:#6A1B9A;--or-l:#F3E8FF;--or-d:#4A116E;
+  --tx:#1A1A1A;--tx2:#6B6B6B;--tx3:#9E9E9E;
+  --bg:#F5F4F2;--sf:#FFFFFF;--bd:#E8E6E2;--bd2:#D0CEC9;
+  --gr:#1A8C4E;--gr-bg:#E8F5EE;
+  --re:#C0392B;--re-bg:#FDEAEA;
+  --wa:#25D366;
+  --r:12px;--rs:8px;
+  --sb:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--tx)}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+#hdr{background:var(--sf);border-bottom:1px solid var(--bd);padding:12px 16px 10px;flex-shrink:0}
+#main{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(64px + var(--sb))}
+.tab-bar{display:flex;border-bottom:1px solid var(--bd);background:var(--sf);flex-shrink:0}
+.tb{flex:1;padding:9px 0 7px;background:none;border:none;border-bottom:2px solid transparent;font-size:12px;font-weight:500;color:var(--tx2);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .15s}
+.tb svg{width:20px;height:20px;stroke:var(--tx2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tb.active{color:var(--or);border-bottom-color:var(--or)}
+.tb.active svg{stroke:var(--or)}
+.badge{background:var(--or);color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:10px;min-width:16px;text-align:center}
+.tb:not(.active) .badge{background:var(--tx3)}
 
-  /* ---- LAYOUT ---- */
-  #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
-  #header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 16px 10px; flex-shrink: 0; }
-  #main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: calc(72px + var(--safe-bottom)); }
-  #footer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 10px 16px calc(10px + var(--safe-bottom)); flex-shrink: 0; display: none; }
+/* HEADER */
+.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.logo{display:flex;align-items:center;gap:8px}
+.logo-mark{width:32px;height:32px;background:var(--or);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:18px;height:18px;fill:white}
+.logo-name{font-size:17px;font-weight:700;letter-spacing:-.3px}
+.logo-name span{color:var(--or)}
+.sync-btn{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--bd);border-radius:20px;background:var(--bg);font-size:12px;color:var(--tx2);cursor:pointer}
+.sync-btn svg{width:14px;height:14px;stroke:var(--tx2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sync-btn.syncing svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.nivel-sel{display:flex;gap:4px}
+.nv{flex:1;padding:6px 0;border:1px solid var(--bd);background:var(--bg);border-radius:var(--rs);font-size:12px;font-weight:500;color:var(--tx2);cursor:pointer;text-align:center;transition:all .15s}
+.nv.active{background:var(--or);border-color:var(--or);color:#fff}
 
-  /* ---- HEADER ---- */
-  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-  .logo { display: flex; align-items: center; gap: 8px; }
-  .logo-mark { width: 32px; height: 32px; background: var(--orange); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-  .logo-mark svg { width: 18px; height: 18px; fill: white; }
-  .logo-name { font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
-  .logo-name span { color: var(--orange); }
-  .header-actions { display: flex; gap: 8px; }
-  .btn-icon { width: 34px; height: 34px; border-radius: 50%; background: var(--bg); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-  .btn-icon svg { width: 18px; height: 18px; stroke: var(--text-2); }
-  .nivel-selector { display: flex; gap: 4px; }
-  .nivel-btn { flex: 1; padding: 6px 0; border: 1px solid var(--border); background: var(--bg); border-radius: var(--radius-sm); font-size: 12px; font-weight: 500; color: var(--text-2); cursor: pointer; text-align: center; transition: all 0.15s; }
-  .nivel-btn.active { background: var(--orange); border-color: var(--orange); color: white; }
+/* SEARCH */
+.sw{padding:12px 16px 0;position:relative}
+.si-wrap{position:relative}
+.si-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;stroke:var(--tx3);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+#si{width:100%;padding:11px 38px 11px 38px;border:1px solid var(--bd);border-radius:var(--r);font-size:16px;background:var(--sf);color:var(--tx);outline:none;-webkit-appearance:none}
+#si:focus{border-color:var(--or)}
+.si-clr{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--tx3);border:none;cursor:pointer;display:none;align-items:center;justify-content:center}
+.si-clr svg{width:12px;height:12px;stroke:#fff;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+#si:not(:placeholder-shown)~.si-clr{display:flex}
 
-  /* ---- SEARCH ---- */
-  .search-wrap { position: relative; padding: 12px 16px 0; }
-  .search-input-wrap { position: relative; }
-  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; stroke: var(--text-3); pointer-events: none; }
-  #search-input { width: 100%; padding: 11px 40px 11px 38px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 16px; background: var(--surface); color: var(--text); outline: none; -webkit-appearance: none; }
-  #search-input:focus { border-color: var(--orange); }
-  #search-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; border-radius: 50%; background: var(--text-3); border: none; cursor: pointer; display: none; align-items: center; justify-content: center; }
-  #search-clear svg { width: 12px; height: 12px; stroke: white; stroke-width: 2.5; }
-  #search-input:not(:placeholder-shown) ~ #search-clear { display: flex; }
+/* CATS */
+.cw{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:10px 16px 0}
+.cw::-webkit-scrollbar{display:none}
+.ci{display:flex;gap:6px;width:max-content}
+.cc{padding:6px 12px;border:1px solid var(--bd);border-radius:20px;font-size:13px;font-weight:500;color:var(--tx2);background:var(--sf);cursor:pointer;white-space:nowrap;transition:all .15s}
+.cc.active{background:var(--or-l);border-color:var(--or);color:var(--or)}
 
-  /* ---- CATEGORY CHIPS ---- */
-  .cats-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 10px 16px 0; }
-  .cats-wrap::-webkit-scrollbar { display: none; }
-  .cats-inner { display: flex; gap: 6px; width: max-content; }
-  .cat-chip { padding: 6px 12px; border: 1px solid var(--border); border-radius: 20px; font-size: 13px; font-weight: 500; color: var(--text-2); background: var(--surface); cursor: pointer; white-space: nowrap; transition: all 0.15s; }
-  .cat-chip.active { background: var(--orange-light); border-color: var(--orange); color: var(--orange); }
+/* RESULTS */
+#res-sec{padding:10px 16px 0}
+.sec-lbl{font-size:12px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.svc{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;transition:border-color .15s,box-shadow .15s;-webkit-user-select:none;user-select:none}
+.svc:active{border-color:var(--or);box-shadow:0 0 0 3px var(--or-l)}
+.svc-info{flex:1;min-width:0}
+.svc-name{font-size:14px;font-weight:500;color:var(--tx);margin-bottom:2px;line-height:1.3}
+.svc-meta{font-size:12px;color:var(--tx3)}
+.svc-price{text-align:right;flex-shrink:0}
+.svc-pnum{font-size:15px;font-weight:700;color:var(--or)}
+.svc-punit{font-size:11px;color:var(--tx3)}
+.add-btn{width:30px;height:30px;border-radius:50%;background:var(--or);border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.add-btn svg{width:16px;height:16px;stroke:#fff;stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
 
-  /* ---- RESULTS LIST ---- */
-  #results-section { padding: 10px 16px 0; }
-  .section-label { font-size: 12px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
-  .service-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; transition: border-color 0.15s, box-shadow 0.15s; -webkit-user-select: none; user-select: none; }
-  .service-card:active { border-color: var(--orange); box-shadow: 0 0 0 3px var(--orange-light); }
-  .sc-info { flex: 1; min-width: 0; }
-  .sc-name { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 2px; line-height: 1.3; }
-  .sc-meta { font-size: 12px; color: var(--text-3); }
-  .sc-price { text-align: right; flex-shrink: 0; }
-  .sc-price-num { font-size: 15px; font-weight: 700; color: var(--orange); }
-  .sc-price-unit { font-size: 11px; color: var(--text-3); }
-  .sc-add-btn { width: 30px; height: 30px; border-radius: 50%; background: var(--orange); border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .sc-add-btn svg { width: 16px; height: 16px; stroke: white; stroke-width: 2.5; }
+/* HINT */
+.hint{padding:28px 16px;text-align:center}
+.hint-ico{font-size:36px;margin-bottom:10px}
+.hint-t{font-size:15px;font-weight:600;color:var(--tx);margin-bottom:4px}
+.hint-s{font-size:13px;color:var(--tx2);line-height:1.5}
 
-  /* ---- EMPTY / HINT STATES ---- */
-  .hint-box { padding: 24px 16px; text-align: center; }
-  .hint-icon { font-size: 36px; margin-bottom: 10px; }
-  .hint-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-  .hint-sub { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+/* MANUAL */
+.man-tog{margin:10px 16px 0}
+.man-tog-btn{width:100%;padding:10px;background:var(--sf);border:1px dashed var(--bd2);border-radius:var(--r);font-size:13px;color:var(--tx2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.man-tog-btn svg{width:16px;height:16px;stroke:var(--tx2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#man-form{display:none;background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);margin:8px 16px 0;padding:14px}
+#man-form.open{display:block}
+.fr{margin-bottom:10px}
+.fr label{font-size:12px;font-weight:600;color:var(--tx2);display:block;margin-bottom:4px}
+.fr input,.fr select{width:100%;padding:9px 12px;border:1px solid var(--bd);border-radius:var(--rs);font-size:15px;color:var(--tx);background:var(--bg);-webkit-appearance:none;outline:none}
+.fr input:focus,.fr select:focus{border-color:var(--or);background:var(--sf)}
+.fgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.btn-submit{width:100%;padding:11px;background:var(--or);border:none;border-radius:var(--rs);color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px}
+.btn-submit:active{background:var(--or-d)}
 
-  /* ---- MANUAL SECTION ---- */
-  .manual-toggle { margin: 10px 16px 0; }
-  .manual-toggle-btn { width: 100%; padding: 10px; background: var(--surface); border: 1px dashed var(--border-strong); border-radius: var(--radius); font-size: 13px; color: var(--text-2); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
-  .manual-toggle-btn svg { width: 16px; height: 16px; stroke: var(--text-2); }
-  #manual-form { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin: 8px 16px 0; padding: 14px; }
-  #manual-form.open { display: block; }
-  .form-row { margin-bottom: 10px; }
-  .form-row label { font-size: 12px; font-weight: 600; color: var(--text-2); display: block; margin-bottom: 4px; }
-  .form-row input, .form-row select { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 15px; color: var(--text); background: var(--bg); -webkit-appearance: none; outline: none; }
-  .form-row input:focus, .form-row select:focus { border-color: var(--orange); background: var(--surface); }
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-  .btn-submit { width: 100%; padding: 11px; background: var(--orange); border: none; border-radius: var(--radius-sm); color: white; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 4px; }
-  .btn-submit:active { background: var(--orange-dark); }
+/* COT VIEW */
+.cot-hdr{padding:14px 16px 0}
+.cot-hdr-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.cot-lbl{font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.cot-inp{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:var(--rs);font-size:14px;color:var(--tx);background:var(--sf);-webkit-appearance:none;outline:none}
+.cot-inp:focus{border-color:var(--or)}
+.cot-slbl{font-size:12px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;padding:0 16px;margin-bottom:8px}
+.ci-card{background:var(--sf);border-bottom:1px solid var(--bd);padding:12px 16px;display:flex;align-items:flex-start;gap:10px}
+.ci-info{flex:1;min-width:0}
+.ci-name{font-size:14px;font-weight:500;color:var(--tx);line-height:1.3;margin-bottom:2px}
+.ci-detail{font-size:12px;color:var(--tx3)}
+.ci-right{text-align:right;flex-shrink:0}
+.ci-sub{font-size:14px;font-weight:700;color:var(--tx)}
+.ci-del{width:26px;height:26px;border-radius:50%;background:var(--re-bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.ci-del svg{width:13px;height:13px;stroke:var(--re);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.cot-tots{background:var(--sf);padding:14px 16px;border-top:2px solid var(--bd)}
+.tr{display:flex;justify-content:space-between;font-size:13px;color:var(--tx2);margin-bottom:4px}
+.tr.big{font-size:17px;font-weight:700;color:var(--tx);margin-top:8px;padding-top:8px;border-top:1px solid var(--bd);margin-bottom:0}
+.cot-empty{padding:32px 16px;text-align:center;color:var(--tx3);font-size:14px}
 
-  /* ---- COTIZACIÓN VIEW ---- */
-  #view-cot { display: none; }
-  .cot-header { padding: 14px 16px 0; }
-  .cot-header-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-  .cot-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px; }
-  .cot-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; color: var(--text); background: var(--surface); -webkit-appearance: none; outline: none; }
-  .cot-input:focus { border-color: var(--orange); }
-  .cot-section-label { font-size: 12px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; padding: 0 16px; margin-bottom: 8px; }
-  .cot-item { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: flex-start; gap: 10px; }
-  .cot-item-info { flex: 1; min-width: 0; }
-  .cot-item-name { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.3; margin-bottom: 2px; }
-  .cot-item-detail { font-size: 12px; color: var(--text-3); }
-  .cot-item-right { text-align: right; flex-shrink: 0; }
-  .cot-item-subtotal { font-size: 14px; font-weight: 700; color: var(--text); }
-  .cot-item-del { width: 26px; height: 26px; border-radius: 50%; background: var(--red-bg); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
-  .cot-item-del svg { width: 13px; height: 13px; stroke: var(--red); stroke-width: 2.5; }
-  .cot-totals { background: var(--surface); padding: 14px 16px; margin: 0; border-top: 2px solid var(--border); }
-  .tot-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-2); margin-bottom: 4px; }
-  .tot-row.big { font-size: 17px; font-weight: 700; color: var(--text); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); margin-bottom: 0; }
-  .cot-empty { padding: 32px 16px; text-align: center; color: var(--text-3); font-size: 14px; }
+/* ACTION BUTTONS */
+.cot-actions{display:flex;flex-direction:column;gap:8px;padding:14px 16px;background:var(--sf);border-top:1px solid var(--bd)}
+.btn-pdf{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;background:var(--or-d);border:none;border-radius:var(--r);color:#fff;font-size:15px;font-weight:600;cursor:pointer;width:100%}
+.btn-pdf svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn-pdf:active{background:#35104F}
+.btn-wa{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;background:var(--wa);border:none;border-radius:var(--r);color:#fff;font-size:15px;font-weight:600;cursor:pointer;width:100%}
+.btn-wa svg{width:20px;height:20px;fill:#fff}
+.btn-wa:active{background:#1da851}
+.btn-wa-pdf{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;background:var(--or);border:none;border-radius:var(--r);color:#fff;font-size:15px;font-weight:600;cursor:pointer;width:100%}
+.btn-wa-pdf:active{background:var(--or-d)}
+.btn-wa-pdf svg{width:20px;height:20px;fill:#fff;flex-shrink:0;display:block}
 
-  /* ---- BOTTOM BAR ---- */
-  .footer-inner { display: flex; align-items: center; gap: 10px; }
-  .footer-summary { flex: 1; }
-  .footer-items { font-size: 12px; color: var(--text-2); }
-  .footer-total { font-size: 18px; font-weight: 700; color: var(--text); }
-  .btn-wa { display: flex; align-items: center; gap: 8px; padding: 12px 20px; background: #25D366; border: none; border-radius: var(--radius); color: white; font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap; }
-  .btn-wa svg { width: 20px; height: 20px; fill: white; }
-  .btn-wa:active { background: #1da851; }
+/* CONFIG VIEW */
+.cfg-sec{padding:16px 16px 8px}
+.cfg-sec-title{font-size:13px;font-weight:700;color:var(--tx);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--bd)}
+.cfg-field{margin-bottom:12px}
+.cfg-field label{font-size:12px;font-weight:600;color:var(--tx2);display:block;margin-bottom:4px}
+.cfg-field input,.cfg-field textarea{width:100%;padding:9px 12px;border:1px solid var(--bd);border-radius:var(--rs);font-size:14px;color:var(--tx);background:var(--sf);-webkit-appearance:none;outline:none;font-family:inherit}
+.cfg-field input:focus,.cfg-field textarea:focus{border-color:var(--or)}
+.cfg-field textarea{resize:vertical;min-height:60px}
+.cfg-field .hint-text{font-size:11px;color:var(--tx3);margin-top:3px;line-height:1.4}
+.cfg-save{width:100%;padding:12px;background:var(--or);border:none;border-radius:var(--r);color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px}
+.cfg-save:active{background:var(--or-d)}
+.info-box{background:var(--or-l);border:1px solid var(--or);border-radius:var(--rs);padding:12px 14px;margin-bottom:12px}
+.info-box p{font-size:13px;color:var(--or-d);line-height:1.5}
+.info-box strong{font-weight:600}
+.steps-box{background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);padding:12px 14px;margin-bottom:12px}
+.step-row{display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--bd)}
+.step-row:last-child{border-bottom:none}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--or);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-txt{font-size:13px;color:var(--tx2);line-height:1.4}
+.step-txt strong{color:var(--tx);font-weight:600}
 
-  /* ---- TAB BAR ---- */
-  .tab-bar { display: flex; border-bottom: 1px solid var(--border); background: var(--surface); }
-  .tab-btn { flex: 1; padding: 10px 0; background: none; border: none; border-bottom: 2px solid transparent; font-size: 13px; font-weight: 500; color: var(--text-2); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; transition: all 0.15s; }
-  .tab-btn svg { width: 20px; height: 20px; stroke: var(--text-2); }
-  .tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); }
-  .tab-btn.active svg { stroke: var(--orange); }
-  .tab-badge { background: var(--orange); color: white; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 10px; min-width: 16px; text-align: center; }
-  .tab-btn:not(.active) .tab-badge { background: var(--text-3); }
+/* MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-ov.open{opacity:1;pointer-events:all}
+.modal-sh{background:var(--sf);border-radius:20px 20px 0 0;padding:20px 20px calc(20px + var(--sb));width:100%;transform:translateY(100%);transition:transform .25s cubic-bezier(.4,0,.2,1)}
+.modal-ov.open .modal-sh{transform:translateY(0)}
+.modal-hdl{width:36px;height:4px;background:var(--bd2);border-radius:2px;margin:0 auto 16px}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:4px}
+.modal-sname{font-size:13px;color:var(--tx2);margin-bottom:16px;line-height:1.4}
+.modal-pr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;background:var(--bg);border-radius:var(--rs);padding:10px 14px}
+.modal-pr-lbl{font-size:13px;color:var(--tx2)}
+.modal-pr-val{font-size:20px;font-weight:700;color:var(--or)}
+.modal-pr-unit{font-size:12px;color:var(--tx3)}
+.qty-row{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.qty-lbl{font-size:13px;color:var(--tx2);flex:1}
+.qty-ctrl{display:flex;align-items:center;border:1px solid var(--bd);border-radius:var(--rs);overflow:hidden}
+.qty-btn{width:42px;height:42px;border:none;background:var(--bg);font-size:20px;color:var(--tx);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.qty-btn:active{background:var(--bd)}
+#mq{width:52px;height:42px;text-align:center;border:none;border-left:1px solid var(--bd);border-right:1px solid var(--bd);font-size:16px;font-weight:600;color:var(--tx);background:var(--sf);-webkit-appearance:none;outline:none}
+.modal-sub{font-size:13px;color:var(--tx2);text-align:center;margin-bottom:16px}
+.modal-sub strong{color:var(--tx)}
+.btn-confirm{width:100%;padding:14px;background:var(--or);border:none;border-radius:var(--r);color:#fff;font-size:16px;font-weight:700;cursor:pointer}
+.btn-confirm:active{background:var(--or-d)}
 
-  /* ---- MODAL ---- */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
-  .modal-overlay.open { opacity: 1; pointer-events: all; }
-  .modal-sheet { background: var(--surface); border-radius: 20px 20px 0 0; padding: 20px 20px calc(20px + var(--safe-bottom)); width: 100%; transform: translateY(100%); transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); }
-  .modal-overlay.open .modal-sheet { transform: translateY(0); }
-  .modal-handle { width: 36px; height: 4px; background: var(--border-strong); border-radius: 2px; margin: 0 auto 16px; }
-  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
-  .modal-service-name { font-size: 13px; color: var(--text-2); margin-bottom: 16px; line-height: 1.4; }
-  .modal-price-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; background: var(--bg); border-radius: var(--radius-sm); padding: 10px 14px; }
-  .modal-price-label { font-size: 13px; color: var(--text-2); }
-  .modal-price-val { font-size: 20px; font-weight: 700; color: var(--orange); }
-  .modal-price-unit { font-size: 12px; color: var(--text-3); }
-  .qty-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-  .qty-label { font-size: 13px; color: var(--text-2); flex: 1; }
-  .qty-ctrl { display: flex; align-items: center; gap: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
-  .qty-btn { width: 42px; height: 42px; border: none; background: var(--bg); font-size: 20px; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .qty-btn:active { background: var(--border); }
-  #modal-qty-val { width: 52px; height: 42px; text-align: center; border: none; border-left: 1px solid var(--border); border-right: 1px solid var(--border); font-size: 16px; font-weight: 600; color: var(--text); background: var(--surface); -webkit-appearance: none; outline: none; }
-  .modal-subtotal { font-size: 13px; color: var(--text-2); text-align: center; margin-bottom: 16px; }
-  .modal-subtotal strong { color: var(--text); }
-  .btn-add-confirm { width: 100%; padding: 14px; background: var(--orange); border: none; border-radius: var(--radius); color: white; font-size: 16px; font-weight: 700; cursor: pointer; }
-  .btn-add-confirm:active { background: var(--orange-dark); }
+/* TOAST */
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);background:#1A1A1A;color:#fff;padding:10px 18px;border-radius:20px;font-size:14px;font-weight:500;z-index:200;transition:transform .3s cubic-bezier(.4,0,.2,1);white-space:nowrap;max-width:90vw}
+.toast.show{transform:translateX(-50%) translateY(0)}
 
-  /* ---- TOAST ---- */
-  .toast { position: fixed; top: 16px; left: 50%; transform: translateX(-50%) translateY(-80px); background: #1A1A1A; color: white; padding: 10px 18px; border-radius: 20px; font-size: 14px; font-weight: 500; z-index: 200; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); white-space: nowrap; }
-  .toast.show { transform: translateX(-50%) translateY(0); }
+/* LOADER */
+.sheet-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--tx3);padding:8px 16px 0}
+.sheet-status.ok{color:var(--gr)}
+.sheet-status.err{color:var(--re)}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0}
 </style>
 </head>
 <body>
-
 <div id="app">
 
   <!-- HEADER -->
-  <div id="header">
-    <div class="header-top">
+  <div id="hdr">
+    <div class="hdr-top">
       <div class="logo">
         <div class="logo-mark">
-          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22" style="fill:none;stroke:white;stroke-width:2"/></svg>
         </div>
         <div class="logo-name">Arregla<span>Ya</span></div>
       </div>
-      <div class="header-actions">
-        <button class="btn-icon" onclick="showInstallTip()" title="Instalar app">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v13m0 0l-4-4m4 4l4-4M2 17l.621 2.485A2 2 0 004.561 21H19.44a2 2 0 001.94-1.515L22 17"/></svg>
-        </button>
-      </div>
+      <button class="sync-btn" id="sync-btn" onclick="syncSheets()">
+        <svg id="sync-ico" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        <span id="sync-lbl">Actualizar catálogo</span>
+      </button>
     </div>
-    <div class="nivel-selector">
-      <button class="nivel-btn" data-nivel="eco" onclick="setNivel('eco')">Económico</button>
-      <button class="nivel-btn active" data-nivel="std" onclick="setNivel('std')">Estándar</button>
-      <button class="nivel-btn" data-nivel="pre" onclick="setNivel('pre')">Premium</button>
+    <div class="nivel-sel">
+      <button class="nv" data-n="eco" onclick="setNivel('eco')">Económico</button>
+      <button class="nv active" data-n="std" onclick="setNivel('std')">Estándar</button>
+      <button class="nv" data-n="pre" onclick="setNivel('pre')">Premium</button>
     </div>
   </div>
 
-  <!-- TAB BAR -->
+  <!-- TABS -->
   <div class="tab-bar">
-    <button class="tab-btn active" id="tab-buscar-btn" onclick="showView('buscar')">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <button class="tb active" id="tb-cat" onclick="showView('cat')">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       Catálogo
     </button>
-    <button class="tab-btn" id="tab-cot-btn" onclick="showView('cotizacion')">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
-      Cotización <span class="tab-badge" id="badge-count">0</span>
+    <button class="tb" id="tb-cot" onclick="showView('cot')">
+      <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+      Cotización <span class="badge" id="bdg">0</span>
+    </button>
+    <button class="tb" id="tb-cfg" onclick="showView('cfg')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Config
     </button>
   </div>
 
   <!-- MAIN -->
   <div id="main">
 
-    <!-- VISTA: CATÁLOGO -->
-    <div id="view-buscar">
-      <div class="search-wrap">
-        <div class="search-input-wrap">
-          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input type="search" id="search-input" placeholder="Buscar servicio..." autocomplete="off" autocorrect="off" oninput="onSearch(this.value)" onfocus="onSearchFocus()">
-          <button id="search-clear" onclick="clearSearch()">
-            <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    <!-- ===== CATÁLOGO ===== -->
+    <div id="view-cat">
+      <div id="sheet-status" class="sheet-status" style="display:none"></div>
+      <div class="sw">
+        <div class="si-wrap">
+          <svg class="si-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="search" id="si" placeholder="Buscar servicio..." autocomplete="off" autocorrect="off" oninput="onSearch(this.value)" onfocus="onFocus()">
+          <button class="si-clr" onclick="clearSearch()">
+            <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
         </div>
       </div>
-
-      <div class="cats-wrap">
-        <div class="cats-inner" id="cats-inner">
-          <button class="cat-chip active" data-cat="" onclick="setCategory('')">Todos</button>
+      <div class="cw"><div class="ci" id="cats"></div></div>
+      <div id="res-sec">
+        <div class="hint" id="hint-start">
+          <div class="hint-ico">🔧</div>
+          <div class="hint-t">Busca un servicio</div>
+          <div class="hint-s">Escribe el nombre, o selecciona una categoría.</div>
         </div>
+        <div id="res-list"></div>
       </div>
-
-      <div id="results-section">
-        <div class="hint-box" id="hint-start">
-          <div class="hint-icon">🔧</div>
-          <div class="hint-title">Busca un servicio</div>
-          <div class="hint-sub">Escribe el nombre o categoría,<br>o selecciona una categoría arriba.</div>
-        </div>
-        <div id="results-list"></div>
-      </div>
-
-      <div class="manual-toggle">
-        <button class="manual-toggle-btn" onclick="toggleManual()">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+      <div class="man-tog">
+        <button class="man-tog-btn" onclick="toggleManual()">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
           Agregar ítem manual
         </button>
       </div>
-      <div id="manual-form">
-        <div class="form-row">
-          <label>Descripción</label>
-          <input type="text" id="m-desc" placeholder="Ej: Limpieza de cisterna">
-        </div>
-        <div class="form-grid">
-          <div class="form-row">
-            <label>Cantidad</label>
-            <input type="number" id="m-cant" value="1" min="0.1" step="0.1">
-          </div>
-          <div class="form-row">
-            <label>Precio unit.</label>
-            <input type="number" id="m-precio" placeholder="0.00" min="0">
-          </div>
-          <div class="form-row">
-            <label>Unidad</label>
-            <input type="text" id="m-unidad" placeholder="serv">
-          </div>
+      <div id="man-form">
+        <div class="fr"><label>Descripción</label><input type="text" id="m-desc" placeholder="Ej: Limpieza de cisterna"></div>
+        <div class="fgrid">
+          <div class="fr"><label>Cantidad</label><input type="number" id="m-cant" value="1" min="0.1" step="0.5"></div>
+          <div class="fr"><label>Precio unit.</label><input type="number" id="m-precio" placeholder="0.00" min="0"></div>
+          <div class="fr"><label>Unidad</label><input type="text" id="m-unidad" placeholder="serv"></div>
         </div>
         <button class="btn-submit" onclick="agregarManual()">Agregar a cotización</button>
       </div>
-      <div style="height: 16px;"></div>
+      <div style="height:16px"></div>
     </div>
 
-    <!-- VISTA: COTIZACIÓN -->
-    <div id="view-cot">
-      <div class="cot-header">
-        <div class="cot-header-fields">
-          <div>
-            <div class="cot-label">Cliente / Empresa</div>
-            <input class="cot-input" id="cot-cliente" type="text" placeholder="Nombre o empresa">
-          </div>
-          <div>
-            <div class="cot-label">Fecha</div>
-            <input class="cot-input" id="cot-fecha" type="text" readonly>
-          </div>
+    <!-- ===== COTIZACIÓN ===== -->
+    <div id="view-cot" style="display:none">
+      <div class="cot-hdr">
+        <div class="cot-hdr-grid">
+          <div><div class="cot-lbl">Cliente / Empresa</div><input class="cot-inp" id="c-cliente" type="text" placeholder="Nombre o empresa"></div>
+          <div><div class="cot-lbl">Folio</div><input class="cot-inp" id="c-folio" type="text" placeholder="COT-001"></div>
         </div>
-        <div>
-          <div class="cot-label">Descripción del servicio (opcional)</div>
-          <input class="cot-input" id="cot-desc" type="text" placeholder="Ej: Mantenimiento correctivo oficinas" style="margin-bottom:12px">
+        <div style="margin-bottom:8px"><div class="cot-lbl">Servicio / Descripción</div><input class="cot-inp" id="c-desc" type="text" placeholder="Ej: Mantenimiento correctivo oficinas"></div>
+        <div class="cot-hdr-grid" style="margin-bottom:8px">
+          <div><div class="cot-lbl">Ubicación</div><input class="cot-inp" id="c-ubicacion" type="text" placeholder="Ej: Monterrey, N.L."></div>
+          <div><div class="cot-lbl">Fecha</div><input class="cot-inp" id="c-fecha" type="text" readonly></div>
+        </div>
+        <div class="cot-hdr-grid" style="margin-bottom:12px">
+          <div><div class="cot-lbl">Vigencia (días)</div><input class="cot-inp" id="c-vigencia" type="number" value="15"></div>
+          <div><div class="cot-lbl">Anticipo / condición</div><input class="cot-inp" id="c-condicion" type="text" placeholder="Ej: 50% anticipo"></div>
         </div>
       </div>
-      <div class="cot-section-label">Partidas</div>
+      <div class="cot-slbl">Partidas</div>
       <div id="cot-items"></div>
-      <div id="cot-totals"></div>
+      <div id="cot-tots"></div>
+      <div id="cot-actions" style="display:none">
+        <div class="cot-actions">
+          <button class="btn-pdf" onclick="generarPDF(false)">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Ver / Descargar PDF
+          </button>
+          <button class="btn-wa-pdf" onclick="generarPDF(true)">
+            <svg viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Compartir PDF por WhatsApp
+          </button>
+          <button class="btn-wa" onclick="enviarWA()">
+            <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Solo WhatsApp (texto)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CONFIG ===== -->
+    <div id="view-cfg" style="display:none">
+      <div class="cfg-sec">
+        <div class="cfg-sec-title">🔗 Conexión a Google Sheets</div>
+        <div class="info-box">
+          <p>Conecta tu catálogo Excel en Google Sheets para que los precios se actualicen automáticamente desde tu teléfono.</p>
+        </div>
+        <div class="steps-box">
+          <div class="step-row"><div class="step-num">1</div><div class="step-txt">Sube tu Excel a <strong>Google Drive</strong> y ábrelo con Google Sheets</div></div>
+          <div class="step-row"><div class="step-num">2</div><div class="step-txt">En Sheets: <strong>Archivo → Compartir → Publicar en la web</strong> → Hoja CATALOG → CSV</div></div>
+          <div class="step-row"><div class="step-num">3</div><div class="step-txt">Copia el <strong>ID del archivo</strong> de la URL (la parte entre /d/ y /edit)</div></div>
+          <div class="step-row"><div class="step-num">4</div><div class="step-txt">Pégalo abajo y presiona <strong>Guardar y sincronizar</strong></div></div>
+        </div>
+        <div class="cfg-field">
+          <label>ID del Google Sheet</label>
+          <input type="text" id="cfg-sheet-id" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
+          <div class="hint-text">Lo encuentras en la URL del Sheet: docs.google.com/spreadsheets/d/<strong>ESTE-ES-EL-ID</strong>/edit</div>
+        </div>
+        <div class="cfg-field">
+          <label>Nombre de la hoja (tab)</label>
+          <input type="text" id="cfg-sheet-tab" placeholder="CATALOG" value="CATALOG">
+          <div class="hint-text">El nombre exacto del tab donde están los servicios</div>
+        </div>
+      </div>
+
+      <div class="cfg-sec">
+        <div class="cfg-sec-title">🏢 Datos de tu empresa</div>
+        <div class="cfg-field"><label>Nombre de la empresa</label><input type="text" id="cfg-empresa" placeholder="ArreglaYa"></div>
+        <div class="cfg-field"><label>Responsable / Firma</label><input type="text" id="cfg-responsable" placeholder="Ing. Alfonso Martínez"></div>
+        <div class="cfg-field"><label>Teléfono</label><input type="text" id="cfg-tel" placeholder="+52 833 335 7517"></div>
+        <div class="cfg-field"><label>Correo</label><input type="text" id="cfg-email" placeholder="contacto@arreglaya.mx"></div>
+        <div class="cfg-field"><label>Sitio web</label><input type="text" id="cfg-web" placeholder="arreglaya.mx"></div>
+        <div class="cfg-field">
+          <label>Sección "3. Alcance y consideraciones" del PDF</label>
+          <textarea id="cfg-alcance" rows="2" placeholder="Definir alcance o consideraciones de manera ejecutiva."></textarea>
+        </div>
+        <div class="cfg-field">
+          <label>Observaciones comerciales (sección 4)</label>
+          <textarea id="cfg-obs" rows="4" placeholder="• Vigencia de cotización: 15 días naturales.&#10;• Tiempo estimado sujeto a condiciones de acceso.&#10;• Trabajos adicionales deben autorizarse por escrito."></textarea>
+        </div>
+      </div>
+
+      <div style="padding:0 16px 16px">
+        <button class="cfg-save" onclick="guardarConfig()">Guardar y sincronizar catálogo</button>
+      </div>
+
+      <div class="cfg-sec">
+        <div class="cfg-sec-title">📱 Instalar como app (APK / iPhone)</div>
+        <div class="steps-box">
+          <div class="step-row"><div class="step-num">A</div><div class="step-txt"><strong>Android:</strong> Abre este archivo en Chrome → menú ⋮ → "Agregar a pantalla de inicio" → se instala como app</div></div>
+          <div class="step-row"><div class="step-num">B</div><div class="step-txt"><strong>APK real:</strong> Sube el archivo a <strong>pwabuilder.com</strong> → genera APK firmado → instala el .apk en tu Android</div></div>
+          <div class="step-row"><div class="step-num">C</div><div class="step-txt"><strong>iPhone:</strong> Abre en Safari → compartir → "Agregar a pantalla de inicio"</div></div>
+        </div>
+      </div>
+      <div style="height:20px"></div>
     </div>
 
   </div><!-- /main -->
-
-  <!-- FOOTER BAR (cotización) -->
-  <div id="footer-bar">
-    <div class="footer-inner">
-      <div class="footer-summary">
-        <div class="footer-items" id="footer-items-label">0 partidas</div>
-        <div class="footer-total" id="footer-total">$0</div>
-      </div>
-      <button class="btn-wa" onclick="enviarWhatsApp()">
-        <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        Enviar por WhatsApp
-      </button>
-    </div>
-  </div>
-
 </div><!-- /app -->
 
-<!-- MODAL agregar cantidad -->
-<div class="modal-overlay" id="modal" onclick="closeModal(event)">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title" id="modal-cat"></div>
-    <div class="modal-service-name" id="modal-name"></div>
-    <div class="modal-price-row">
-      <div>
-        <div class="modal-price-label">Precio unitario</div>
-        <div class="modal-price-unit" id="modal-unit"></div>
-      </div>
-      <div class="modal-price-val" id="modal-price"></div>
+<!-- MODAL -->
+<div class="modal-ov" id="modal" onclick="closeModalClick(event)">
+  <div class="modal-sh">
+    <div class="modal-hdl"></div>
+    <div class="modal-title" id="m-cat"></div>
+    <div class="modal-sname" id="m-name"></div>
+    <div class="modal-pr">
+      <div><div class="modal-pr-lbl">Precio unitario</div><div class="modal-pr-unit" id="m-unit"></div></div>
+      <div class="modal-pr-val" id="m-price"></div>
     </div>
     <div class="qty-row">
-      <div class="qty-label">Cantidad</div>
+      <div class="qty-lbl">Cantidad</div>
       <div class="qty-ctrl">
-        <button class="qty-btn" onclick="changeQty(-1)">−</button>
-        <input type="number" id="modal-qty-val" value="1" min="0.1" step="1" oninput="updateModalSubtotal()">
-        <button class="qty-btn" onclick="changeQty(1)">+</button>
+        <button class="qty-btn" onclick="dq(-1)">−</button>
+        <input type="number" id="mq" value="1" min="0.1" step="1" oninput="updSub()">
+        <button class="qty-btn" onclick="dq(1)">+</button>
       </div>
     </div>
-    <div class="modal-subtotal" id="modal-subtotal">Subtotal: <strong>$0</strong></div>
-    <button class="btn-add-confirm" onclick="confirmAdd()">Agregar a cotización</button>
+    <div class="modal-sub" id="m-sub">Subtotal: <strong>$0</strong></div>
+    <button class="btn-confirm" onclick="confirmAdd()">Agregar a cotización</button>
   </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ===================== CATÁLOGO =====================
-const CATALOG = [
-  // Acabados
+// ==================== CATÁLOGO BASE ====================
+const BASE_CATALOG = [
   {code:"AZU-COLO",name:"Colocación de azulejo (solo m.o.)",unit:"m2",cat:"Acabados",eco:329.99,std:389.99,pre:476.67},
-  // Construcción
   {code:"DEM-AZU",name:"Demolición de azulejo + retiro",unit:"m2",cat:"Construcción",eco:253.84,std:299.99,pre:366.65},
   {code:"DEM-MURO",name:"Demolición de muros (block + retiro)",unit:"m2",cat:"Construcción",eco:296.15,std:349.99,pre:427.77},
   {code:"DRY-RH",name:"Muro tablaroca RH doble cara",unit:"m2",cat:"Construcción",eco:355.38,std:419.99,pre:513.32},
-  // Electricidad
   {code:"ELE-APAG",name:"Cambio / instalación de apagador sencillo",unit:"pza",cat:"Electricidad",eco:286.83,std:338.98,pre:414.31},
   {code:"ELE-CONTACT-INT",name:"Cambio de contacto dúplex interior con tapa",unit:"pza",cat:"Electricidad",eco:330.31,std:390.36,pre:477.11},
   {code:"ELE-CONTACT-EXT",name:"Instalación de contacto exterior con cubierta",unit:"pza",cat:"Electricidad",eco:441.57,std:521.85,pre:637.82},
   {code:"ELE-CANAL-EXP",name:"Canalización expuesta (conduit/tubo)",unit:"ml",cat:"Electricidad",eco:152.30,std:179.99,pre:219.99},
   {code:"ELE-CANAL-OCU",name:"Canalización oculta (ranura + resane)",unit:"ml",cat:"Electricidad",eco:270.77,std:319.99,pre:391.11},
-  {code:"ELE-TABL",name:"Centro de carga / tablero (inst. o sustitución)",unit:"pza",cat:"Electricidad",eco:1522.96,std:1799.86,pre:2199.83},
+  {code:"ELE-TABL",name:"Centro de carga / tablero",unit:"pza",cat:"Electricidad",eco:1522.96,std:1799.86,pre:2199.83},
   {code:"ELE-FALLA",name:"Corrección de fallas y cortos",unit:"serv",cat:"Electricidad",eco:1015.45,std:1200.08,pre:1466.76},
-  {code:"ELE-CONTACT",name:"Instalación de contactos y apagadores",unit:"pza",cat:"Electricidad",eco:297.47,std:351.55,pre:429.68},
   {code:"ELE-PUNTO",name:"Punto eléctrico básico (contacto/lámpara)",unit:"pza",cat:"Electricidad",eco:380.77,std:449.99,pre:549.99},
   {code:"ELE-PUNTO-COMP",name:"Punto eléctrico completo (canal.+cable+disp.)",unit:"pza",cat:"Electricidad",eco:719.24,std:850.01,pre:1038.91},
   {code:"ELE-CABL",name:"Sustitución de cableado (incluye tendido)",unit:"ml",cat:"Electricidad",eco:101.53,std:119.99,pre:146.66},
-  {code:"ELE-CABLE-12",name:"Cable uso rudo calibre 12 instalado",unit:"ml",cat:"Electricidad",eco:139.08,std:164.36,pre:200.89},
-  {code:"ELE-RECABLE",name:"Recableado de foco / lámpara existente",unit:"pza",cat:"Electricidad",eco:549.35,std:649.24,pre:793.51},
-  {code:"ELE-CAJA",name:"Instalación de caja de conexión superficial",unit:"pza",cat:"Electricidad",eco:399.85,std:472.55,pre:577.56},
   {code:"ELE-PROT",name:"Protección eléctrica y mantenimiento",unit:"serv",cat:"Electricidad",eco:1523.05,std:1799.97,pre:2199.97},
-  // Iluminación
   {code:"ELE-FOCO",name:"Cambio de foco / bombilla en punto existente",unit:"pza",cat:"Iluminación",eco:173.85,std:205.45,pre:251.11},
   {code:"ELE-LUM",name:"Instalación / cambio de luminaria sencilla",unit:"pza",cat:"Iluminación",eco:399.85,std:472.55,pre:577.56},
   {code:"ELE-LED",name:"Instalación de iluminación LED (punto)",unit:"pza",cat:"Iluminación",eco:380.77,std:449.99,pre:549.99},
-  {code:"ELE-OFFICE",name:"Iluminación para oficinas (punto)",unit:"pza",cat:"Iluminación",eco:380.77,std:449.99,pre:549.99},
-  {code:"ELE-DECO",name:"Iluminación decorativa (restaurantes/tiendas)",unit:"pza",cat:"Iluminación",eco:550.01,std:650.01,pre:794.45},
+  {code:"ELE-DECO",name:"Iluminación decorativa",unit:"pza",cat:"Iluminación",eco:550.01,std:650.01,pre:794.45},
   {code:"ELE-IND",name:"Iluminación industrial y de altura",unit:"pza",cat:"Iluminación",eco:1015.40,std:1200.02,pre:1466.69},
   {code:"ELE-SUST-LUM",name:"Sustitución de luminarias",unit:"pza",cat:"Iluminación",eco:423.09,std:500.01,pre:611.12},
-  {code:"ELE-AMBI",name:"Diseño básico de ambientación (paquete)",unit:"LS",cat:"Iluminación",eco:2960.93,std:3499.28,pre:4276.90},
-  // Impermeabilización
   {code:"IMPER",name:"Impermeabilización (manto / acrílico)",unit:"m2",cat:"Impermeabilización",eco:194.62,std:230.01,pre:281.12},
   {code:"RES-HUM",name:"Resane por humedad (sellado + resanador)",unit:"m2",cat:"Impermeabilización",eco:156.53,std:184.99,pre:226.09},
-  // Pintura
   {code:"PNT-INT",name:"Pintura interior (muros / plafón)",unit:"m2",cat:"Pintura",eco:80.38,std:95.00,pre:116.11},
   {code:"PNT-EXT",name:"Pintura exterior",unit:"m2",cat:"Pintura",eco:109.99,std:129.99,pre:158.87},
-  // Plomería
-  {code:"PLO-PVC",name:"Drenaje PVC sanitario 2\" instalado",unit:"ml",cat:"Plomería",eco:279.24,std:330.01,pre:403.34},
-  {code:"PLO-CPVC",name:"Tubería CPVC 1/2\" instalada",unit:"ml",cat:"Plomería",eco:236.93,std:280.01,pre:342.23},
-  {code:"WC-INST",name:"Instalación de WC (conexión a drenaje exist.)",unit:"pza",cat:"Plomería",eco:2030.61,std:2399.81,pre:2933.10},
+  {code:"PLO-PVC",name:'Drenaje PVC sanitario 2" instalado',unit:"ml",cat:"Plomería",eco:279.24,std:330.01,pre:403.34},
+  {code:"PLO-CPVC",name:'Tubería CPVC 1/2" instalada',unit:"ml",cat:"Plomería",eco:236.93,std:280.01,pre:342.23},
+  {code:"WC-INST",name:"Instalación de WC",unit:"pza",cat:"Plomería",eco:2030.61,std:2399.81,pre:2933.10},
   {code:"LAV-REU",name:"Reubicación de lavabo (empotrado)",unit:"pza",cat:"Plomería",eco:2622.82,std:3099.70,pre:3788.52},
-  {code:"MING-REU",name:"Reubicación de mingitorio (empotrado)",unit:"pza",cat:"Plomería",eco:3300.25,std:3900.29,pre:4767.03},
-  {code:"PLO-TINACO-INST",name:"Instalación de tinaco 750-1100 L en base exist.",unit:"serv",cat:"Plomería",eco:2369.60,std:2800.44,pre:3422.76},
-  {code:"PLO-TINACO-CONEX",name:"Conexión básica de tinaco a línea existente",unit:"serv",cat:"Plomería",eco:1522.89,std:1799.78,pre:2199.73},
-  // Ventilación
+  {code:"PLO-TINACO-INST",name:"Instalación de tinaco 750-1100 L",unit:"serv",cat:"Plomería",eco:2369.60,std:2800.44,pre:3422.76},
+  {code:"PLO-TINACO-CONEX",name:"Conexión básica de tinaco a línea exist.",unit:"serv",cat:"Plomería",eco:1522.89,std:1799.78,pre:2199.73},
   {code:"VENT-EXTR",name:"Instalación de extractor + ductería básica",unit:"pza",cat:"Ventilación",eco:2115.36,std:2499.97,pre:3055.52},
-  // Carpintería
   {code:"CER-CHAPA",name:"Instalación o cambio de chapa sencilla",unit:"pza",cat:"Carpintería",eco:549.35,std:649.24,pre:793.51},
-  // General
-  {code:"GEN-VISITA",name:"Visita mínima / paquete de trabajos pequeños",unit:"serv",cat:"General",eco:801.80,std:947.58,pre:1158.16},
+  {code:"GEN-VISITA",name:"Visita mínima / paquete trabajos pequeños",unit:"serv",cat:"General",eco:801.80,std:947.58,pre:1158.16},
 ];
 
-// ===================== STATE =====================
+
+// ==================== MARCA / LOGO ====================
+const AY_LOGO_PNG = "data:image/png;base64,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";
+
+// ==================== STATE ====================
+let catalog = [...BASE_CATALOG];
 let nivel = 'std';
-let activeCategory = '';
+let activeCat = '';
 let items = [];
 let nextId = 1;
-let modalService = null;
-let currentView = 'buscar';
-let manualOpen = false;
+let modalSvc = null;
+let manOpen = false;
+let cfg = {};
+const DEFAULT_CFG = {
+  empresa: 'ARREGLA YA',
+  responsable: 'Ing. Alfonso Martínez',
+  tel: '+52 833 335 7517',
+  email: 'contacto@arreglaya.mx',
+  web: 'arreglaya.mx',
+  alcance: 'Alcance ejecutivo conforme a las partidas autorizadas. Incluye mano de obra, ejecución del servicio y pruebas básicas de funcionamiento cuando aplique.',
+  obs: 'Vigencia de cotización: 15 días naturales.\nTiempo estimado de ejecución sujeto a condiciones de acceso, horarios permitidos, disponibilidad de materiales, tiempos de secado y hallazgos durante la intervención.\nCualquier trabajo adicional deberá ser autorizado por el cliente antes de ejecutarse.\nLa mano de obra queda respaldada sobre los trabajos ejecutados. No cubre fallas derivadas de instalaciones existentes ocultas, materiales preexistentes deteriorados, humedad activa, mal uso o movimientos posteriores.'
+};
+let folioNum = 1;
 
-// ===================== INIT =====================
+// ==================== INIT ====================
 function init() {
-  // Fecha
+  loadConfig();
   const hoy = new Date();
-  document.getElementById('cot-fecha').value = hoy.toLocaleDateString('es-MX', {day:'2-digit', month:'2-digit', year:'numeric'});
-
-  // Build category chips
-  const cats = [...new Set(CATALOG.map(s => s.cat))].sort();
-  const inner = document.getElementById('cats-inner');
-  cats.forEach(cat => {
-    const btn = document.createElement('button');
-    btn.className = 'cat-chip';
-    btn.dataset.cat = cat;
-    btn.textContent = cat;
-    btn.onclick = () => setCategory(cat);
-    inner.appendChild(btn);
-  });
+  document.getElementById('c-fecha').value = hoy.toLocaleDateString('es-MX',{day:'2-digit',month:'2-digit',year:'numeric'});
+  document.getElementById('c-folio').value = 'COT-' + String(folioNum).padStart(3,'0');
+  buildCats();
+  // Auto-sync if sheet ID configured
+  if (cfg.sheetId) setTimeout(syncSheets, 500);
 }
 
-// ===================== NIVEL =====================
-function setNivel(n) {
-  nivel = n;
-  document.querySelectorAll('.nivel-btn').forEach(b => b.classList.toggle('active', b.dataset.nivel === n));
-  renderResults();
-  if (modalService) updateModalPrice();
+function loadConfig() {
+  try {
+    const saved = localStorage.getItem('ay_cfg');
+    if (saved) cfg = JSON.parse(saved);
+  } catch(e) { cfg = {}; }
+  cfg = { ...DEFAULT_CFG, ...cfg };
+  // Populate fields
+  if (cfg.sheetId) document.getElementById('cfg-sheet-id').value = cfg.sheetId;
+  if (cfg.sheetTab) document.getElementById('cfg-sheet-tab').value = cfg.sheetTab;
+  if (cfg.empresa) document.getElementById('cfg-empresa').value = cfg.empresa;
+  if (cfg.responsable) document.getElementById('cfg-responsable').value = cfg.responsable;
+  if (cfg.tel) document.getElementById('cfg-tel').value = cfg.tel;
+  if (cfg.email) document.getElementById('cfg-email').value = cfg.email;
+  if (cfg.web) document.getElementById('cfg-web').value = cfg.web;
+  if (cfg.obs) document.getElementById('cfg-obs').value = cfg.obs;
+  if (cfg.alcance) document.getElementById('cfg-alcance').value = cfg.alcance;
+  if (cfg.folioNum) folioNum = cfg.folioNum;
 }
 
-// ===================== SEARCH + FILTER =====================
-function getPrice(s) {
-  return nivel === 'eco' ? s.eco : nivel === 'pre' ? s.pre : s.std;
+function guardarConfig() {
+  cfg = {
+    sheetId: document.getElementById('cfg-sheet-id').value.trim(),
+    sheetTab: document.getElementById('cfg-sheet-tab').value.trim() || 'CATALOG',
+    empresa: document.getElementById('cfg-empresa').value.trim(),
+    responsable: document.getElementById('cfg-responsable').value.trim(),
+    tel: document.getElementById('cfg-tel').value.trim(),
+    email: document.getElementById('cfg-email').value.trim(),
+    web: document.getElementById('cfg-web').value.trim(),
+    obs: document.getElementById('cfg-obs').value.trim(),
+    alcance: document.getElementById('cfg-alcance').value.trim(),
+    folioNum,
+  };
+  try { localStorage.setItem('ay_cfg', JSON.stringify(cfg)); } catch(e) {}
+  showToast('✓ Configuración guardada');
+  if (cfg.sheetId) syncSheets();
+  else showToast('⚠️ Agrega el ID del Sheet para sincronizar');
 }
 
-function onSearch(q) {
-  renderResults(q);
+// ==================== GOOGLE SHEETS SYNC ====================
+async function syncSheets() {
+  if (!cfg.sheetId) { showToast('Configura el ID del Sheet primero'); showView('cfg'); return; }
+  const btn = document.getElementById('sync-btn');
+  const lbl = document.getElementById('sync-lbl');
+  const ico = document.getElementById('sync-ico');
+  btn.classList.add('syncing');
+  lbl.textContent = 'Sincronizando...';
+  setSheetStatus('loading','Conectando con Google Sheets...');
+
+  // Use the published CSV export URL (no API key needed, just needs to be published)
+  const tab = cfg.sheetTab || 'CATALOG';
+  const url = `https://docs.google.com/spreadsheets/d/${cfg.sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
+
+  try {
+    const res = await fetch(url, {cache:'no-store'});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    const parsed = parseSheetCSV(text);
+    if (parsed.length > 0) {
+      catalog = parsed;
+      buildCats();
+      renderResults(document.getElementById('si').value);
+      setSheetStatus('ok', `✓ ${parsed.length} servicios cargados desde Google Sheets`);
+      showToast(`✓ Catálogo actualizado: ${parsed.length} servicios`);
+    } else {
+      throw new Error('Sin datos');
+    }
+  } catch(e) {
+    setSheetStatus('err', '⚠ No se pudo conectar. Usando catálogo local.');
+    showToast('⚠️ Sin conexión — usando catálogo local');
+    catalog = [...BASE_CATALOG];
+    buildCats();
+  }
+
+  btn.classList.remove('syncing');
+  lbl.textContent = 'Actualizar catálogo';
 }
 
-function onSearchFocus() {
+function parseSheetCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  // Find header row — look for ServiceCode column
+  let headerIdx = -1;
+  let header = [];
+  for (let i = 0; i < Math.min(5, lines.length); i++) {
+    const row = parseCSVRow(lines[i]);
+    if (row.some(c => c.toLowerCase().includes('servicecode') || c.toLowerCase().includes('servicio'))) {
+      headerIdx = i;
+      header = row.map(h => h.toLowerCase().trim());
+      break;
+    }
+  }
+  if (headerIdx < 0) return [];
+
+  const ci = h => header.indexOf(h);
+  const codeI   = ci('servicecode');
+  const nameI   = ['servicio','service','nombre'].map(ci).find(x => x >= 0) ?? -1;
+  const catI    = ['categoría','categoria','category','clasificacion'].map(ci).find(x => x >= 0) ?? -1;
+  const unitI   = ['unidad','unit','units'].map(ci).find(x => x >= 0) ?? -1;
+  const ecoI    = ['sell_económico','sell_economico','economico','eco'].map(ci).find(x => x >= 0) ?? -1;
+  const stdI    = ['sell_estándar','sell_estandar','estándar','estandar','std'].map(ci).find(x => x >= 0) ?? -1;
+  const preI    = ['sell_premium','premium','pre'].map(ci).find(x => x >= 0) ?? -1;
+
+  const results = [];
+  for (let i = headerIdx + 1; i < lines.length; i++) {
+    const row = parseCSVRow(lines[i]);
+    if (!row.length || !row[codeI]) continue;
+    const eco = parseFloat(row[ecoI]) || 0;
+    const std = parseFloat(row[stdI]) || 0;
+    const pre = parseFloat(row[preI]) || 0;
+    if (!std && !eco && !pre) continue;
+    results.push({
+      code: row[codeI] || '',
+      name: (nameI >= 0 ? row[nameI] : '') || row[codeI],
+      cat:  (catI >= 0 ? row[catI] : '') || 'General',
+      unit: (unitI >= 0 ? row[unitI] : '') || 'serv',
+      eco:  eco || std,
+      std:  std || eco,
+      pre:  pre || std,
+    });
+  }
+  return results;
+}
+
+function parseCSVRow(line) {
+  const result = [];
+  let cur = '';
+  let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (ch === ',' && !inQ) {
+      result.push(cur.trim()); cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+function setSheetStatus(type, msg) {
+  const el = document.getElementById('sheet-status');
+  el.style.display = 'flex';
+  el.className = 'sheet-status' + (type === 'ok' ? ' ok' : type === 'err' ? ' err' : '');
+  el.innerHTML = `<div class="dot"></div><span>${msg}</span>`;
+}
+
+// ==================== CATALOG UI ====================
+function buildCats() {
+  const cats = [...new Set(catalog.map(s => s.cat))].sort();
+  const el = document.getElementById('cats');
+  const active = activeCat && cats.includes(activeCat) ? activeCat : '';
+  activeCat = active;
+  el.innerHTML = `<button class="cc ${!active?'active':''}" data-c="" onclick="setCat('')">Todos</button>` +
+    cats.map(c => `<button class="cc ${c===active?'active':''}" data-c="${c}" onclick="setCat('${c}')">${c}</button>`).join('');
+}
+
+function gp(s) { return nivel==='eco'?s.eco:nivel==='pre'?s.pre:s.std; }
+
+function onSearch(q) { renderResults(q); }
+function onFocus() {
   document.getElementById('hint-start').style.display = 'none';
-  renderResults(document.getElementById('search-input').value);
+  renderResults(document.getElementById('si').value);
 }
-
 function clearSearch() {
-  document.getElementById('search-input').value = '';
+  document.getElementById('si').value = '';
   renderResults('');
 }
-
-function setCategory(cat) {
-  activeCategory = cat;
-  document.querySelectorAll('.cat-chip').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+function setCat(c) {
+  activeCat = c;
+  document.querySelectorAll('.cc').forEach(b => b.classList.toggle('active', b.dataset.c === c));
   document.getElementById('hint-start').style.display = 'none';
-  renderResults(document.getElementById('search-input').value);
+  renderResults(document.getElementById('si').value);
+}
+function setNivel(n) {
+  nivel = n;
+  document.querySelectorAll('.nv').forEach(b => b.classList.toggle('active', b.dataset.n === n));
+  renderResults(document.getElementById('si').value);
+  if (modalSvc) updModalPrice();
 }
 
 function renderResults(q = '') {
   const q2 = q.toLowerCase().trim();
-  let filtered = CATALOG;
-
-  if (activeCategory) filtered = filtered.filter(s => s.cat === activeCategory);
-  if (q2) {
-    filtered = filtered.filter(s =>
-      s.name.toLowerCase().includes(q2) ||
-      s.cat.toLowerCase().includes(q2) ||
-      s.code.toLowerCase().includes(q2)
-    );
-  }
-
-  const list = document.getElementById('results-list');
+  let filtered = catalog;
+  if (activeCat) filtered = filtered.filter(s => s.cat === activeCat);
+  if (q2) filtered = filtered.filter(s =>
+    s.name.toLowerCase().includes(q2) || s.cat.toLowerCase().includes(q2) || s.code.toLowerCase().includes(q2)
+  );
+  const list = document.getElementById('res-list');
   const hint = document.getElementById('hint-start');
-
-  if (!q2 && !activeCategory) {
-    hint.style.display = '';
-    list.innerHTML = '';
-    return;
-  }
-
+  if (!q2 && !activeCat) { hint.style.display = ''; list.innerHTML = ''; return; }
   hint.style.display = 'none';
-
-  if (!filtered.length) {
-    list.innerHTML = '<div class="hint-box"><div class="hint-icon">🔍</div><div class="hint-title">Sin resultados</div><div class="hint-sub">Intenta con otra búsqueda<br>o agrégalo como ítem manual.</div></div>';
-    return;
-  }
-
-  // Group by category if no active filter
-  let html = '';
-  if (!activeCategory) {
+  if (!filtered.length) { list.innerHTML = '<div class="hint"><div class="hint-ico">🔍</div><div class="hint-t">Sin resultados</div><div class="hint-s">Intenta con otra búsqueda o agrega un ítem manual.</div></div>'; return; }
+  if (!activeCat) {
     const bycat = {};
     filtered.forEach(s => { (bycat[s.cat] = bycat[s.cat] || []).push(s); });
-    Object.keys(bycat).sort().forEach(cat => {
-      html += `<div class="section-label" style="margin-top:14px">${cat}</div>`;
-      bycat[cat].forEach(s => { html += serviceCard(s); });
-    });
+    list.innerHTML = Object.keys(bycat).sort().map(cat =>
+      `<div class="sec-lbl" style="margin-top:14px">${cat}</div>` + bycat[cat].map(sCard).join('')
+    ).join('');
   } else {
-    filtered.forEach(s => { html += serviceCard(s); });
+    list.innerHTML = filtered.map(sCard).join('');
   }
-
-  list.innerHTML = html;
 }
 
-function serviceCard(s) {
-  const p = getPrice(s);
-  return `<div class="service-card" onclick="openModal('${s.code}')">
-    <div class="sc-info">
-      <div class="sc-name">${s.name}</div>
-      <div class="sc-meta">${s.cat} · ${s.unit}</div>
-    </div>
-    <div class="sc-price">
-      <div class="sc-price-num">${fmt(p)}</div>
-      <div class="sc-price-unit">/${s.unit}</div>
-    </div>
-    <div class="sc-add-btn" aria-label="Agregar">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-    </div>
+function sCard(s) {
+  const p = gp(s);
+  return `<div class="svc" onclick="openModal('${s.code}')">
+    <div class="svc-info"><div class="svc-name">${s.name}</div><div class="svc-meta">${s.cat} · ${s.unit}</div></div>
+    <div class="svc-price"><div class="svc-pnum">${fmt(p)}</div><div class="svc-punit">/${s.unit}</div></div>
+    <div class="add-btn" aria-label="Agregar"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div>
   </div>`;
 }
 
-// ===================== MODAL =====================
+// ==================== MODAL ====================
 function openModal(code) {
-  modalService = CATALOG.find(s => s.code === code);
-  if (!modalService) return;
-  document.getElementById('modal-cat').textContent = modalService.cat;
-  document.getElementById('modal-name').textContent = modalService.name;
-  document.getElementById('modal-unit').textContent = 'por ' + modalService.unit;
-  document.getElementById('modal-qty-val').value = 1;
-  updateModalPrice();
+  modalSvc = catalog.find(s => s.code === code);
+  if (!modalSvc) return;
+  document.getElementById('m-cat').textContent = modalSvc.cat;
+  document.getElementById('m-name').textContent = modalSvc.name;
+  document.getElementById('m-unit').textContent = 'por ' + modalSvc.unit;
+  document.getElementById('mq').value = 1;
+  updModalPrice();
   document.getElementById('modal').classList.add('open');
-  document.getElementById('modal-qty-val').focus();
 }
-
-function updateModalPrice() {
-  if (!modalService) return;
-  const p = getPrice(modalService);
-  document.getElementById('modal-price').textContent = fmt(p);
-  updateModalSubtotal();
+function updModalPrice() {
+  if (!modalSvc) return;
+  document.getElementById('m-price').textContent = fmt(gp(modalSvc));
+  updSub();
 }
-
-function updateModalSubtotal() {
-  if (!modalService) return;
-  const qty = parseFloat(document.getElementById('modal-qty-val').value) || 1;
-  const p = getPrice(modalService);
-  document.getElementById('modal-subtotal').innerHTML = `Subtotal: <strong>${fmt(qty * p)}</strong>`;
+function updSub() {
+  if (!modalSvc) return;
+  const q = parseFloat(document.getElementById('mq').value) || 1;
+  document.getElementById('m-sub').innerHTML = `Subtotal: <strong>${fmt(q * gp(modalSvc))}</strong>`;
 }
-
-function changeQty(delta) {
-  const inp = document.getElementById('modal-qty-val');
-  const cur = parseFloat(inp.value) || 1;
-  const next = Math.max(0.5, cur + delta);
-  inp.value = Number.isInteger(next) ? next : next.toFixed(1);
-  updateModalSubtotal();
+function dq(d) {
+  const inp = document.getElementById('mq');
+  const n = Math.max(0.5, (parseFloat(inp.value)||1) + d);
+  inp.value = Number.isInteger(n) ? n : n.toFixed(1);
+  updSub();
 }
-
-function closeModal(e) {
-  if (e.target === document.getElementById('modal') || !e) {
-    document.getElementById('modal').classList.remove('open');
-    modalService = null;
-  }
-}
-
+function closeModalClick(e) { if (e.target === document.getElementById('modal')) document.getElementById('modal').classList.remove('open'); }
 function confirmAdd() {
-  if (!modalService) return;
-  const qty = parseFloat(document.getElementById('modal-qty-val').value) || 1;
-  const precio = getPrice(modalService);
-  items.push({
-    id: nextId++,
-    desc: modalService.name,
-    unit: modalService.unit,
-    cant: qty,
-    precio,
-    cat: modalService.cat,
-    fromCatalog: true,
-  });
+  if (!modalSvc) return;
+  const qty = parseFloat(document.getElementById('mq').value) || 1;
+  items.push({ id: nextId++, desc: modalSvc.name, unit: modalSvc.unit, cant: qty, precio: gp(modalSvc), cat: modalSvc.cat });
   document.getElementById('modal').classList.remove('open');
-  modalService = null;
-  renderCotizacion();
-  updateBadge();
+  modalSvc = null;
+  renderCot(); updateBadge();
   showToast('✓ Agregado a la cotización');
 }
 
-// ===================== MANUAL =====================
-function toggleManual() {
-  manualOpen = !manualOpen;
-  document.getElementById('manual-form').classList.toggle('open', manualOpen);
-}
-
+// ==================== MANUAL ====================
+function toggleManual() { manOpen = !manOpen; document.getElementById('man-form').classList.toggle('open', manOpen); }
 function agregarManual() {
   const desc = document.getElementById('m-desc').value.trim();
   const cant = parseFloat(document.getElementById('m-cant').value) || 1;
@@ -596,248 +729,458 @@ function agregarManual() {
   const unit = document.getElementById('m-unidad').value.trim() || 'serv';
   if (!desc) { showToast('⚠️ Escribe una descripción'); return; }
   if (!precio) { showToast('⚠️ Escribe un precio unitario'); return; }
-  items.push({ id: nextId++, desc, unit, cant, precio, cat: 'Manual', fromCatalog: false });
+  items.push({ id: nextId++, desc, unit, cant, precio, cat: 'Manual' });
   document.getElementById('m-desc').value = '';
   document.getElementById('m-precio').value = '';
   document.getElementById('m-unidad').value = '';
   document.getElementById('m-cant').value = 1;
-  renderCotizacion();
-  updateBadge();
-  showToast('✓ Ítem manual agregado');
-  showView('cotizacion');
+  renderCot(); updateBadge();
+  showToast('✓ Ítem agregado');
+  showView('cot');
 }
 
-// ===================== COTIZACIÓN =====================
-function renderCotizacion() {
-  const cotItems = document.getElementById('cot-items');
-  const cotTotals = document.getElementById('cot-totals');
-  const footerBar = document.getElementById('footer-bar');
-
+// ==================== COTIZACIÓN ====================
+function renderCot() {
+  const el = document.getElementById('cot-items');
+  const tots = document.getElementById('cot-tots');
+  const acts = document.getElementById('cot-actions');
   if (!items.length) {
-    cotItems.innerHTML = '<div class="cot-empty">Aún no hay partidas.<br>Busca servicios en el catálogo.</div>';
-    cotTotals.innerHTML = '';
-    footerBar.style.display = 'none';
-    return;
+    el.innerHTML = '<div class="cot-empty">Aún no hay partidas.<br>Busca servicios en el catálogo.</div>';
+    tots.innerHTML = ''; acts.style.display = 'none'; return;
   }
-
-  footerBar.style.display = 'block';
-
-  cotItems.innerHTML = items.map((item, i) => {
+  acts.style.display = 'block';
+  el.innerHTML = items.map((item, i) => {
     const sub = item.cant * item.precio;
-    return `<div class="cot-item">
-      <div class="cot-item-info">
-        <div class="cot-item-name">${item.desc}</div>
-        <div class="cot-item-detail">${item.cant} ${item.unit} × ${fmt(item.precio)}</div>
+    return `<div class="ci-card">
+      <div class="ci-info">
+        <div class="ci-name">${i+1}. ${item.desc}</div>
+        <div class="ci-detail">${item.cant} ${item.unit} × ${fmt(item.precio)}</div>
       </div>
-      <div class="cot-item-right">
-        <div class="cot-item-subtotal">${fmt(sub)}</div>
-      </div>
-      <button class="cot-item-del" onclick="eliminarItem(${item.id})" aria-label="Eliminar partida">
-        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+      <div class="ci-right"><div class="ci-sub">${fmt(sub)}</div></div>
+      <button class="ci-del" onclick="delItem(${item.id})" aria-label="Eliminar">
+        <svg viewBox="0 0 24 24"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg>
       </button>
     </div>`;
   }).join('');
-
-  const subtotal = items.reduce((s, x) => s + x.cant * x.precio, 0);
-  const iva = subtotal * 0.16;
-  const total = subtotal + iva;
-
-  cotTotals.innerHTML = `<div class="cot-totals">
-    <div class="tot-row"><span>Subtotal sin IVA</span><span>${fmt(subtotal)}</span></div>
-    <div class="tot-row"><span>IVA 16%</span><span>${fmt(iva)}</span></div>
-    <div class="tot-row big"><span>Total con IVA</span><span>${fmt(total)}</span></div>
+  const sub = items.reduce((s, x) => s + x.cant * x.precio, 0);
+  const iva = sub * 0.16;
+  const tot = sub + iva;
+  tots.innerHTML = `<div class="cot-tots">
+    <div class="tr"><span>Subtotal sin IVA</span><span>${fmt(sub)}</span></div>
+    <div class="tr"><span>IVA 16%</span><span>${fmt(iva)}</span></div>
+    <div class="tr big"><span>Total con IVA</span><span>${fmt(tot)}</span></div>
   </div>`;
-
-  // Footer
-  document.getElementById('footer-items-label').textContent = `${items.length} partida${items.length !== 1 ? 's' : ''}`;
-  document.getElementById('footer-total').textContent = fmt(total);
 }
+function delItem(id) { items = items.filter(x => x.id !== id); renderCot(); updateBadge(); }
+function updateBadge() { document.getElementById('bdg').textContent = items.length; }
 
-function eliminarItem(id) {
-  items = items.filter(x => x.id !== id);
-  renderCotizacion();
-  updateBadge();
-}
-
-function updateBadge() {
-  document.getElementById('badge-count').textContent = items.length;
-}
-
-// ===================== VISTAS =====================
-function showView(view) {
-  currentView = view;
-  document.getElementById('view-buscar').style.display = view === 'buscar' ? 'block' : 'none';
-  document.getElementById('view-cot').style.display = view === 'cotizacion' ? 'block' : 'none';
-  document.getElementById('tab-buscar-btn').classList.toggle('active', view === 'buscar');
-  document.getElementById('tab-cot-btn').classList.toggle('active', view === 'cotizacion');
-
-  if (view === 'cotizacion') {
-    renderCotizacion();
-    document.getElementById('footer-bar').style.display = items.length ? 'block' : 'none';
-  } else {
-    document.getElementById('footer-bar').style.display = 'none';
-  }
-}
-
-// ===================== WHATSAPP =====================
-function enviarWhatsApp() {
+// ==================== PDF ====================
+async function generarPDF(openWA) {
   if (!items.length) { showToast('⚠️ La cotización está vacía'); return; }
 
-  const cliente = document.getElementById('cot-cliente').value.trim() || 'Cliente';
-  const desc = document.getElementById('cot-desc').value.trim();
-  const fecha = document.getElementById('cot-fecha').value;
-  const nivelNombre = nivel === 'eco' ? 'Económico' : nivel === 'pre' ? 'Premium' : 'Estándar';
-  const subtotal = items.reduce((s, x) => s + x.cant * x.precio, 0);
-  const iva = subtotal * 0.16;
-  const total = subtotal + iva;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const W = 210, H = 297, M = 14;
 
-  let msg = `*COTIZACIÓN — ARREGLA YA*\n`;
-  msg += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  msg += `📋 *Cliente:* ${cliente}\n`;
+  // Brand colors (ArreglaYa: purple/violet)
+  const PUR  = [98,  57, 161];  // #6239A1 — morado principal
+  const PUR2 = [120, 80, 180];  // accent más claro
+  const GRAY = [90,  90,  90];
+  const LGRAY= [230, 230, 230];
+  const WHITE= [255, 255, 255];
+  const BLACK= [30,  30,  30];
+
+  const empresa    = cfg.empresa    || DEFAULT_CFG.empresa;
+  const cliente    = document.getElementById('c-cliente').value  || 'Cliente';
+  const folio      = document.getElementById('c-folio').value    || 'COT-001';
+  const fecha      = document.getElementById('c-fecha').value;
+  const descServ   = document.getElementById('c-desc').value     || '';
+  const vigencia   = document.getElementById('c-vigencia').value || '15';
+  const responsable= cfg.responsable || DEFAULT_CFG.responsable;
+  const tel        = cfg.tel   || DEFAULT_CFG.tel;
+  const email      = cfg.email || DEFAULT_CFG.email;
+  const web        = cfg.web   || DEFAULT_CFG.web;
+  const ubicacion  = document.getElementById('c-ubicacion') ? document.getElementById('c-ubicacion').value || 'Por definir' : 'Por definir';
+  const obsText    = cfg.obs   || `Vigencia de cotización: ${vigencia} días naturales.\nTiempo estimado de ejecución sujeto a condiciones de acceso, horarios permitidos, disponibilidad de materiales, tiempos de secado y hallazgos durante la intervención.\nCualquier trabajo adicional deberá ser autorizado por el cliente antes de ejecutarse.\nLa mano de obra queda respaldada sobre los trabajos ejecutados. No cubre fallas derivadas de instalaciones existentes ocultas, materiales preexistentes deteriorados, humedad activa, mal uso o movimientos posteriores.`;
+
+  // ============================================================
+  // HELPER: draw the ArreglaYa lightning-bolt "A" logo in SVG-like style
+  // ============================================================
+  function drawLogo(x, y, width) {
+    // Logo oficial ArreglaYa extraído del formato base de cotización
+    const ratio = 500 / 295;
+    const height = width / ratio;
+    doc.addImage(AY_LOGO_PNG, 'PNG', x, y, width, height);
+  }
+
+  // ============================================================
+  // SECTION 1 — HEADER
+  // ============================================================
+  // Logo oficial arriba a la izquierda
+  drawLogo(M, 6, 38);
+
+  // Contact info top-right (aligned right, purple)
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...PUR);
+  const contactLines = [];
+  if (email) contactLines.push(email);
+  if (tel)   contactLines.push(tel);
+  if (web)   contactLines.push(web);
+  else       contactLines.push('arreglaya.mx');
+  contactLines.forEach((line, i) => {
+    doc.text(line, W - M, 13 + i * 5, { align: 'right' });
+  });
+
+  // Thin separator line under header
+  doc.setDrawColor(...LGRAY);
+  doc.setLineWidth(0.4);
+  doc.line(M, 29, W - M, 29);
+
+  // ============================================================
+  // SECTION 2 — EMPRESA / SERVICIO / UBICACIÓN  +  FOLIO box
+  // ============================================================
+  let y = 32;
+
+  // Left table: Empresa, Servicio, Ubicación
+  const leftW = 110;
+  const lblW  = 26;
+  const rowH  = 8;
+  const leftRows = [
+    ['EMPRESA:', cliente],
+    ['SERVICIO:', descServ || 'Por definir'],
+    ['UBICACIÓN:', ubicacion],
+  ];
+
+  leftRows.forEach((row, i) => {
+    const ry = y + i * rowH;
+    // Label cell — purple fill
+    doc.setFillColor(...PUR);
+    doc.rect(M, ry, lblW, rowH, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...WHITE);
+    doc.text(row[0], M + 2, ry + 5.2);
+
+    // Value cell — light border
+    doc.setDrawColor(...LGRAY);
+    doc.setLineWidth(0.3);
+    doc.rect(M + lblW, ry, leftW - lblW, rowH, 'S');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...BLACK);
+    const valLines = doc.splitTextToSize(row[1], leftW - lblW - 4);
+    doc.text(valLines[0], M + lblW + 3, ry + 5.2);
+  });
+
+  // Right box: "COTIZACIÓN DE SERVICIOS" header + Fecha
+  const rightX = M + leftW + 8;
+  const rightW = W - M - rightX;
+  // Title bar
+  doc.setFillColor(...PUR);
+  doc.rect(rightX, y, rightW, rowH, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...WHITE);
+  doc.text('COTIZACIÓN DE SERVICIOS', rightX + rightW / 2, y + 5.2, { align: 'center' });
+  // Fecha row
+  doc.setDrawColor(...LGRAY); doc.setLineWidth(0.3);
+  doc.rect(rightX, y + rowH, rightW, rowH, 'S');
+  doc.setFontSize(7.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(...PUR);
+  doc.text('Fecha:', rightX + 3, y + rowH + 5.2);
+  doc.setFont('helvetica', 'normal'); doc.setTextColor(...BLACK); doc.setFontSize(8.5);
+  doc.text(fecha, rightX + rightW - 3, y + rowH + 5.2, { align: 'right' });
+  // Folio row
+  doc.rect(rightX, y + rowH * 2, rightW, rowH, 'S');
+  doc.setFontSize(7.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(...PUR);
+  doc.text('Folio:', rightX + 3, y + rowH * 2 + 5.2);
+  doc.setFont('helvetica', 'normal'); doc.setTextColor(...BLACK); doc.setFontSize(8.5);
+  doc.text(folio, rightX + rightW - 3, y + rowH * 2 + 5.2, { align: 'right' });
+
+  y += leftRows.length * rowH + 8;
+
+  // ============================================================
+  // SECTION 3 — "1. Descripción del servicio"
+  // ============================================================
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(...PUR);
+  doc.text('1. Descripción del servicio', M, y);
+  y += 5;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(...GRAY);
+  const descLines = doc.splitTextToSize(descServ || 'Definir servicio de manera ejecutiva', W - 2 * M);
+  doc.text(descLines, M, y);
+  y += descLines.length * 4.5 + 6;
+
+  // ============================================================
+  // SECTION 4 — "2. Propuesta económica" — TABLE
+  // ============================================================
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(...PUR);
+  doc.text('2. Propuesta económica', M, y);
+  y += 4;
+
+  const sub = items.reduce((s, x) => s + x.cant * x.precio, 0);
+  const iva = sub * 0.16;
+  const tot = sub + iva;
+
+  // Build table rows — "Alcance comercial" is the full description
+  const tableBody = items.map((item, i) => [
+    String(i + 1),
+    item.cat || item.desc.split(' ').slice(0, 2).join(' '),  // short concept (category)
+    item.desc,                                                // alcance comercial = full name
+    item.unit,
+    item.cant % 1 === 0 ? String(item.cant) : item.cant.toFixed(1),
+    fmtN(item.precio),
+    fmtN(item.cant * item.precio),
+  ]);
+
+  // Totals rows
+  const totalsBody = [
+    [{ content: 'Subtotal sin IVA', colSpan: 6, styles: { halign: 'right', fontStyle: 'bold', textColor: BLACK, fillColor: [245,245,245] } }, { content: fmtN(sub), styles: { halign: 'right', fontStyle: 'bold', textColor: BLACK, fillColor: [245,245,245] } }],
+    [{ content: 'IVA 16%', colSpan: 6, styles: { halign: 'right', fontStyle: 'bold', textColor: BLACK, fillColor: [240,240,240] } }, { content: fmtN(iva), styles: { halign: 'right', fontStyle: 'bold', textColor: BLACK, fillColor: [240,240,240] } }],
+    [{ content: 'Total con IVA', colSpan: 6, styles: { halign: 'right', fontStyle: 'bold', textColor: WHITE, fillColor: PUR } }, { content: fmtN(tot), styles: { halign: 'right', fontStyle: 'bold', textColor: WHITE, fillColor: PUR } }],
+  ];
+
+  doc.autoTable({
+    startY: y,
+    head: [['Partida', 'Concepto', 'Alcance comercial', 'Unidad', 'Cant.', 'Precio Unit', 'Importe']],
+    body: [...tableBody, ...totalsBody],
+    margin: { left: M, right: M },
+    headStyles: {
+      fillColor: PUR,
+      textColor: WHITE,
+      fontStyle: 'bold',
+      fontSize: 8,
+      halign: 'center',
+      cellPadding: { top: 3, bottom: 3, left: 2, right: 2 },
+    },
+    columnStyles: {
+      0: { halign: 'center', cellWidth: 12 },
+      1: { halign: 'center', cellWidth: 22 },
+      2: { halign: 'left',   cellWidth: 74 },
+      3: { halign: 'center', cellWidth: 14 },
+      4: { halign: 'center', cellWidth: 12 },
+      5: { halign: 'right',  cellWidth: 22 },
+      6: { halign: 'right',  cellWidth: 22 },
+    },
+    bodyStyles: { fontSize: 8.5, cellPadding: { top: 3, bottom: 3, left: 2, right: 2 }, textColor: BLACK },
+    alternateRowStyles: { fillColor: [248, 247, 252] },
+    styles: { overflow: 'linebreak', lineColor: LGRAY, lineWidth: 0.25 },
+    tableLineColor: LGRAY,
+    tableLineWidth: 0.25,
+  });
+
+  y = doc.lastAutoTable.finalY + 8;
+
+  // ============================================================
+  // SECTION 5 — "3. Alcance, consideraciones"
+  // ============================================================
+  if (y > 220) { doc.addPage(); y = 18; }
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(...PUR);
+  doc.text('3. Alcance, consideraciones', M, y);
+  y += 5;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(...GRAY);
+  const alcanceText = cfg.alcance || 'Definir alcance o consideraciones de manera ejecutiva.';
+  const alcLines = doc.splitTextToSize(alcanceText, W - 2 * M);
+  doc.text(alcLines, M, y);
+  y += alcLines.length * 4.5 + 6;
+
+  // ============================================================
+  // SECTION 6 — "4. Observaciones comerciales"
+  // ============================================================
+  if (y > 220) { doc.addPage(); y = 18; }
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor(...PUR);
+  doc.text('4. Observaciones comerciales', M, y);
+  y += 5;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...BLACK);
+  const obsItems = obsText.split('\n').filter(l => l.trim());
+  obsItems.forEach(line => {
+    const txt = line.replace(/^[•\-]\s*/, '');
+    const wrapped = doc.splitTextToSize('• ' + txt, W - 2 * M - 4);
+    if (y + wrapped.length * 4.5 > H - 40) { doc.addPage(); y = 18; }
+    doc.text(wrapped, M + 2, y);
+    y += wrapped.length * 4.5 + 1.5;
+  });
+
+  y += 8;
+
+  // ============================================================
+  // SECTION 7 — FIRMA
+  // ============================================================
+  if (y > 245) { doc.addPage(); y = 18; }
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...BLACK);
+  doc.text(empresa.toUpperCase(), M, y);
+  y += 5;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(...GRAY);
+  doc.text(responsable, M, y);
+  y += 4;
+  doc.text('Responsable del proyecto', M, y);
+  y += 10;
+
+  // ============================================================
+  // FOOTER (bottom of last page) — logo + WhatsApp icon + email icon
+  // ============================================================
+  const pages = doc.internal.getNumberOfPages();
+  for (let p = 1; p <= pages; p++) {
+    doc.setPage(p);
+    const fy = H - 18;
+    // Top border
+    doc.setDrawColor(...LGRAY); doc.setLineWidth(0.5);
+    doc.line(M, fy - 2, W - M, fy - 2);
+
+    // Left: mini logo + sitio web, conforme al formato comercial
+    doc.addImage(AY_LOGO_PNG, 'PNG', M, fy - 1, 14, 8.3);
+    doc.setFontSize(8.5); doc.setTextColor(...PUR);
+    doc.setFont('helvetica', 'bold');
+    doc.text(web || 'arreglaya.mx', M + 16, fy + 5);
+
+    // Center: WhatsApp icon (circle + text)
+    const cx = W / 2;
+    doc.setFillColor(37, 211, 102);
+    doc.circle(cx - 16, fy + 3.5, 3.5, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(...WHITE);
+    doc.text('W', cx - 17.2, fy + 4.8);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...BLACK);
+    doc.text(tel || '+52 833 335 7517', cx - 10, fy + 5);
+
+    // Right: email icon + email
+    const rx = W - M;
+    doc.setFillColor(...PUR);
+    doc.rect(rx - 62, fy + 0.5, 6, 5, 'F');
+    doc.setDrawColor(...WHITE); doc.setLineWidth(0.4);
+    doc.line(rx - 62, fy + 0.5, rx - 59, fy + 3.5);
+    doc.line(rx - 62 + 6, fy + 0.5, rx - 59, fy + 3.5);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...BLACK);
+    doc.text(email || 'contacto@arreglaya.mx', rx - 53, fy + 5);
+  }
+
+  const filename = `Cotizacion_${folio}_${cliente.replace(/\s+/g, '_')}.pdf`;
+
+  if (openWA) {
+    const msg = buildWAMsg();
+    try {
+      const blob = doc.output('blob');
+      const file = new File([blob], filename, { type: 'application/pdf' });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: `Cotización ${folio}`,
+          text: msg,
+          files: [file]
+        });
+        showToast('✓ PDF listo para compartir');
+      } else {
+        doc.save(filename);
+        setTimeout(() => {
+          window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+        }, 700);
+        showToast('📎 PDF descargado — adjúntalo en WhatsApp');
+      }
+    } catch(e) {
+      doc.save(filename);
+      setTimeout(() => {
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+      }, 700);
+      showToast('📎 PDF descargado — adjúntalo en WhatsApp');
+    }
+  } else {
+    doc.save(filename);
+    showToast('✓ PDF descargado: ' + filename);
+  }
+
+  // Increment folio
+  folioNum++;
+  try { cfg.folioNum = folioNum; localStorage.setItem('ay_cfg', JSON.stringify(cfg)); } catch(e) {}
+}
+
+// ==================== WHATSAPP ====================
+function buildWAMsg() {
+  const empresa = cfg.empresa || DEFAULT_CFG.empresa;
+  const cliente = document.getElementById('c-cliente').value || 'Cliente';
+  const folio   = document.getElementById('c-folio').value || 'COT-001';
+  const fecha   = document.getElementById('c-fecha').value;
+  const desc    = document.getElementById('c-desc').value;
+  const vigencia = document.getElementById('c-vigencia').value || '15';
+  const tel     = cfg.tel || DEFAULT_CFG.tel;
+  const web     = cfg.web || DEFAULT_CFG.web;
+  const nivelNombre = nivel === 'eco' ? 'Económico' : nivel === 'pre' ? 'Premium' : 'Estándar';
+  const sub = items.reduce((s, x) => s + x.cant * x.precio, 0);
+  const iva = sub * 0.16;
+  const tot = sub + iva;
+
+  let msg = `*COTIZACIÓN — ${empresa.toUpperCase()}*\n`;
+  msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `📋 *Folio:* ${folio}\n`;
+  msg += `👤 *Cliente:* ${cliente}\n`;
   msg += `📅 *Fecha:* ${fecha}\n`;
   msg += `🏷 *Nivel:* ${nivelNombre}\n`;
   if (desc) msg += `🔧 *Servicio:* ${desc}\n`;
   msg += `\n*PARTIDAS*\n`;
-
   items.forEach((item, i) => {
-    const sub = item.cant * item.precio;
-    msg += `\n${i + 1}. ${item.desc}\n`;
-    msg += `   ${item.cant} ${item.unit} × ${fmtPlano(item.precio)} = *${fmtPlano(sub)}*\n`;
+    const s = item.cant * item.precio;
+    msg += `\n${i+1}. ${item.desc}\n   ${item.cant} ${item.unit} × ${fmtWA(item.precio)} = *${fmtWA(s)}*\n`;
   });
-
-  msg += `\n━━━━━━━━━━━━━━━━━━━━━\n`;
-  msg += `Subtotal:     ${fmtPlano(subtotal)}\n`;
-  msg += `IVA 16%:      ${fmtPlano(iva)}\n`;
-  msg += `*TOTAL:       ${fmtPlano(total)}*\n`;
-  msg += `\n_Vigencia: 15 días naturales_\n`;
-  msg += `_ArreglaYa · arreglaya.mx · 833 335 7517_`;
-
-  const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-  window.open(url, '_blank');
+  msg += `\n━━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `Subtotal:    ${fmtWA(sub)}\nIVA 16%:     ${fmtWA(iva)}\n*TOTAL:      ${fmtWA(tot)}*\n`;
+  msg += `\n_Vigencia: ${vigencia} días naturales_\n`;
+  msg += `_${empresa}`;
+  if (tel) msg += ` · ${tel}`;
+  if (web) msg += ` · ${web}`;
+  msg += `_`;
+  return msg;
 }
 
-// ===================== UTIL =====================
-function fmt(n) {
-  return '$' + Math.round(n).toLocaleString('es-MX');
+function enviarWA() {
+  if (!items.length) { showToast('⚠️ La cotización está vacía'); return; }
+  window.open(`https://wa.me/?text=${encodeURIComponent(buildWAMsg())}`, '_blank');
 }
 
-function fmtPlano(n) {
-  return '$' + Math.round(n).toLocaleString('es-MX');
+// ==================== VIEWS ====================
+function showView(v) {
+  ['cat','cot','cfg'].forEach(id => {
+    document.getElementById('view-'+id).style.display = id === v ? 'block' : 'none';
+    document.getElementById('tb-'+id).classList.toggle('active', id === v);
+  });
+  if (v === 'cot') renderCot();
 }
+
+// ==================== UTIL ====================
+function fmt(n) { return '$' + Math.round(n).toLocaleString('es-MX'); }
+function fmtN(n) { return '$' + Math.round(n).toLocaleString('es-MX'); }
+function fmtWA(n) { return '$' + Math.round(n).toLocaleString('es-MX'); }
 
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
+  clearTimeout(t._to);
+  t._to = setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-function showInstallTip() {
-  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-  const isAndroid = /Android/.test(navigator.userAgent);
-  if (isIOS) {
-    showToast('Toca "Compartir" → "Agregar a inicio"');
-  } else if (isAndroid) {
-    showToast('Toca menú ⋮ → "Agregar a pantalla de inicio"');
-  } else {
-    showToast('Abre desde tu celular para instalar');
-  }
-}
-
-// Keyboard: close modal on Escape
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.getElementById('modal').classList.remove('open');
-});
-
-
-// ===================== PWA + PERSISTENCIA LOCAL =====================
-const STORAGE_KEY = 'arreglaya_cotizador_estado_v1';
-
-function saveCotizadorState() {
-  try {
-    const clienteEl = document.getElementById('cot-cliente');
-    const descEl = document.getElementById('cot-desc');
-    const state = {
-      nivel,
-      activeCategory,
-      items,
-      nextId,
-      cliente: clienteEl ? clienteEl.value : '',
-      desc: descEl ? descEl.value : ''
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (err) {
-    console.warn('No se pudo guardar el estado local:', err);
-  }
-}
-
-function loadCotizadorState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const state = JSON.parse(raw);
-    if (!state || typeof state !== 'object') return;
-
-    nivel = ['eco', 'std', 'pre'].includes(state.nivel) ? state.nivel : 'std';
-    activeCategory = state.activeCategory || '';
-    items = Array.isArray(state.items) ? state.items : [];
-    nextId = Number.isFinite(Number(state.nextId)) ? Number(state.nextId) : (items.length + 1);
-
-    document.querySelectorAll('.nivel-btn').forEach(b => b.classList.toggle('active', b.dataset.nivel === nivel));
-    document.querySelectorAll('.cat-chip').forEach(b => b.classList.toggle('active', b.dataset.cat === activeCategory));
-
-    const clienteEl = document.getElementById('cot-cliente');
-    const descEl = document.getElementById('cot-desc');
-    if (clienteEl && state.cliente) clienteEl.value = state.cliente;
-    if (descEl && state.desc) descEl.value = state.desc;
-  } catch (err) {
-    console.warn('No se pudo cargar el estado local:', err);
-  }
-}
-
-function attachAutosave() {
-  ['cot-cliente', 'cot-desc'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('input', saveCotizadorState);
-  });
-}
-
-const _setNivelOriginal = setNivel;
-setNivel = function(n) {
-  _setNivelOriginal(n);
-  saveCotizadorState();
-};
-
-const _confirmAddOriginal = confirmAdd;
-confirmAdd = function() {
-  _confirmAddOriginal();
-  saveCotizadorState();
-};
-
-const _agregarManualOriginal = agregarManual;
-agregarManual = function() {
-  _agregarManualOriginal();
-  saveCotizadorState();
-};
-
-const _eliminarItemOriginal = eliminarItem;
-eliminarItem = function(id) {
-  _eliminarItemOriginal(id);
-  saveCotizadorState();
-};
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(err => console.warn('Service worker no registrado:', err));
-  });
-}
-
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.getElementById('modal').classList.remove('open'); });
 init();
-loadCotizadorState();
-attachAutosave();
-renderCotizacion();
-updateBadge();
 </script>
 
+<script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+</script>
 </body>
 </html>

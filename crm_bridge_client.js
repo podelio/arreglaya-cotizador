@@ -123,61 +123,24 @@
     try { snapshot = getQuotePayload(); }
     catch (error) { showStatus('⚠️ ' + error.message); return; }
 
-    const button = document.getElementById('btn-save-crm-draft');
-    if (button) { button.disabled = true; button.textContent = 'Enviando al CRM…'; }
-
     const externalId = getExternalId(snapshot);
-    const requestId = externalId;
-    const payload = { ...snapshot, externalId, requestId };
-    const frameName = 'ay_crm_frame_' + Date.now();
-    const frame = document.createElement('iframe');
-    frame.name = frameName;
-    frame.title = 'Confirmación de guardado CRM';
-    frame.style.display = 'none';
-
+    const payload = { ...snapshot, externalId, requestId: externalId };
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = endpoint;
-    form.target = frameName;
+    form.target = '_blank';
+    form.rel = 'noopener';
     form.style.display = 'none';
     const input = document.createElement('input');
     input.type = 'hidden';
     input.name = 'payload';
     input.value = JSON.stringify(payload);
     form.appendChild(input);
-
-    let finished = false;
-    const cleanup = () => {
-      window.removeEventListener('message', onMessage);
-      form.remove();
-      frame.remove();
-      if (button) { button.disabled = false; button.textContent = 'Guardar borrador en CRM'; }
-    };
-    const onMessage = event => {
-      if (event.source !== frame.contentWindow || !event.data || event.data.type !== MESSAGE_TYPE) return;
-      if (event.data.requestId !== requestId || finished) return;
-      finished = true;
-      if (event.data.ok && event.data.folio) {
-        const folioInput = document.getElementById('c-folio');
-        if (folioInput) folioInput.value = event.data.folio;
-        showStatus((event.data.duplicate ? 'Ya estaba registrada: ' : 'Guardada en CRM: ') + event.data.folio);
-        if (button) { button.textContent = 'Registrada · ' + event.data.folio; button.disabled = true; }
-      } else {
-        showStatus('No se guardó la cotización: ' + (event.data.error || 'revisa el acceso al endpoint.'));
-        cleanup();
-      }
-      setTimeout(() => { if (finished) { form.remove(); frame.remove(); } }, 1200);
-    };
-
-    window.addEventListener('message', onMessage);
-    document.body.appendChild(frame);
     document.body.appendChild(form);
     form.submit();
-    setTimeout(() => {
-      if (finished) return;
-      showStatus('Aún no llegó confirmación. Revisa que estés en tu cuenta de Google autorizada y que el endpoint de prueba esté implementado.');
-      cleanup();
-    }, 45000);
+    setTimeout(() => form.remove(), 3000);
+
+    showStatus('Solicitud enviada a Google. Revisa la pestaña de respuesta y confirma el folio antes de generar el PDF.');
   }
 
   function wrapNewQuote() {

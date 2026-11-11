@@ -91,7 +91,7 @@ function doPost(e) {
         Orden: index + 1,
         Concepto: item.category || item.description,
         Descripcion: item.description,
-        Unidad: item.unit,
+        Unidad: normalizeUnit_(item.unit),
         Cantidad: Number(item.quantity),
         PrecioUnitario: money_(Number(item.unitPrice)),
         Importe: amount,
@@ -232,6 +232,14 @@ function positiveInteger_(value, fallback) {
 
 function money_(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+}
+
+function normalizeUnit_(value) {
+  const unit = String(value || '').trim().toLocaleLowerCase('es-MX');
+  const aliases = { 'serv': 'servicio', 'serv.': 'servicio', 'm2': 'm²', 'm^2': 'm²', 'm3': 'm³', 'm^3': 'm³', 'ml': 'm' };
+  const normalized = aliases[unit] || unit;
+  const allowed = ['pza', 'm', 'm²', 'm³', 'kg', 'l', 'jgo', 'servicio', 'hora', 'día', 'lote', 'otro'];
+  return allowed.indexOf(normalized) >= 0 ? normalized : 'otro';
 }
 
 function normalizeText_(value) {

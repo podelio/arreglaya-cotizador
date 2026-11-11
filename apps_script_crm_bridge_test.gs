@@ -10,7 +10,7 @@
  *
  * This script writes only Cotizaciones and CotizacionPartidas.
  */
-const CRM_BRIDGE_VERSION = '0.1.0-test';
+const CRM_BRIDGE_VERSION = '0.1.1-test';
 const FIRST_CRM_FOLIO = 359;
 const CRM_SHEET_QUOTES = 'Cotizaciones';
 const CRM_SHEET_LINES = 'CotizacionPartidas';

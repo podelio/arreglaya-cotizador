@@ -211,7 +211,9 @@ function getMaxConsecutive_(sheet, headers, year) {
     if (folio.indexOf(prefix) !== 0) return;
     const suffix = folio.slice(prefix.length);
     if (!suffix || !suffix.split('').every(ch => ch >= '0' && ch <= '9')) return;
-    max = Math.max(max, Number(suffix));
+    const value = Number(suffix);
+    if (value > 9999) return;
+    max = Math.max(max, value);
   });
   return max;
 }

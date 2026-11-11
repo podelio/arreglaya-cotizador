@@ -205,7 +205,16 @@ function getMaxConsecutive_(sheet, headers, year) {
   if (folioCol < 1 || lastRow < 2) return max;
 
   const folios = sheet.getRange(2, folioCol, lastRow - 1, 1).getDisplayValues();
-  const yearPattern = new RegExp('^AY-' + year + '-(\\d+)
+  const prefix = 'AY-' + year + '-';
+  folios.forEach(row => {
+    const folio = String(row[0] || '').trim();
+    if (folio.indexOf(prefix) !== 0) return;
+    const suffix = folio.slice(prefix.length);
+    if (!suffix || !suffix.split('').every(ch => ch >= '0' && ch <= '9')) return;
+    max = Math.max(max, Number(suffix));
+  });
+  return max;
+}
 
 function calculateTotals_(items) {
   const subtotal = money_(items.reduce((sum, item) => sum + Number(item.quantity) * Number(item.unitPrice), 0));

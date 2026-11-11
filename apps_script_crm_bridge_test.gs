@@ -48,7 +48,7 @@ function doPost(e) {
     const expiration = new Date(today.getFullYear(), today.getMonth(), today.getDate() + validDays);
     const client = findClient_(clients, payload.quote.client);
     const year = today.getFullYear();
-    const consecutive = Math.max(FIRST_CRM_FOLIO, getMaxConsecutive_(quotes, quoteHeaders) + 1);
+    const consecutive = Math.max(FIRST_CRM_FOLIO, getMaxConsecutive_(quotes, quoteHeaders, year) + 1);
     const folio = 'AY-' + year + '-' + String(consecutive).padStart(4, '0');
     const quoteId = 'REG-' + year + '-' + String(consecutive).padStart(4, '0');
     const updatedAt = new Date();
@@ -198,14 +198,70 @@ function findClient_(sheet, clientName) {
   return match ? { id: match[idCol] || '', rfc: rfcCol >= 0 ? (match[rfcCol] || '') : '' } : { id: '', rfc: '' };
 }
 
-function getMaxConsecutive_(sheet, headers) {
-  const col = headers.indexOf('Consecutivo') + 1;
+function getMaxConsecutive_(sheet, headers, year) {
+  const folioCol = headers.indexOf('Folio') + 1;
   const lastRow = sheet.getLastRow();
-  if (col < 1 || lastRow < 2) return FIRST_CRM_FOLIO - 1;
-  return sheet.getRange(2, col, lastRow - 1, 1).getValues().reduce((max, row) => {
-    const n = parseInt(row[0], 10);
-    return Number.isFinite(n) ? Math.max(max, n) : max;
-  }, FIRST_CRM_FOLIO - 1);
+  let max = FIRST_CRM_FOLIO - 1;
+  if (folioCol < 1 || lastRow < 2) return max;
+
+  const folios = sheet.getRange(2, folioCol, lastRow - 1, 1).getDisplayValues();
+  const yearPattern = new RegExp('^AY-' + year + '-(\\d+)
+
+function calculateTotals_(items) {
+  const subtotal = money_(items.reduce((sum, item) => sum + Number(item.quantity) * Number(item.unitPrice), 0));
+  const iva = money_(subtotal * 0.16);
+  return { subtotal: subtotal, iva: iva, total: money_(subtotal + iva) };
+}
+
+function parseLocalDate_(value) {
+  const text = String(value || '').trim();
+  let m = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+  if (!m) {
+    m = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) throw new Error('Fecha inválida. Usa DD/MM/AAAA o AAAA-MM-DD.');
+    return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  }
+  return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+}
+
+function positiveInteger_(value, fallback) {
+  const n = parseInt(value, 10);
+  return Number.isInteger(n) && n > 0 ? n : fallback;
+}
+
+function money_(value) {
+  return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+}
+
+function normalizeUnit_(value) {
+  const unit = String(value || '').trim().toLocaleLowerCase('es-MX');
+  const aliases = { 'serv': 'servicio', 'serv.': 'servicio', 'm2': 'm²', 'm^2': 'm²', 'm3': 'm³', 'm^3': 'm³', 'ml': 'm' };
+  const normalized = aliases[unit] || unit;
+  const allowed = ['pza', 'm', 'm²', 'm³', 'kg', 'l', 'jgo', 'servicio', 'hora', 'día', 'lote', 'otro'];
+  return allowed.indexOf(normalized) >= 0 ? normalized : 'otro';
+}
+
+function normalizeText_(value) {
+  return String(value || '').trim().toLocaleLowerCase('es-MX').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function normalizeLine_(value) {
+  const v = String(value || '').trim().toLocaleLowerCase('es-MX');
+  if (v === 'res' || v === 'residencial') return 'Residencial';
+  if (v === 'ind' || v === 'industrial') return 'Industrial';
+  if (v === 'com' || v === 'comercial') return 'Comercial';
+  return String(value || '').trim();
+}
+
+function jsonOutput_(value) {
+  return ContentService.createTextOutput(JSON.stringify(value)).setMimeType(ContentService.MimeType.JSON);
+}
+);
+  folios.forEach(row => {
+    const match = String(row[0] || '').trim().match(yearPattern);
+    if (match) max = Math.max(max, Number(match[1]));
+  });
+  return max;
 }
 
 function calculateTotals_(items) {

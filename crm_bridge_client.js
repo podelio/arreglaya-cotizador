@@ -59,7 +59,7 @@
   }
 
   function getQuotePayload() {
-    const quoteItems = Array.isArray(window.items) ? window.items : [];
+    const quoteItems = typeof items !== 'undefined' && Array.isArray(items) ? items : [];
     if (!quoteItems.length) throw new Error('Agrega al menos una partida.');
     const client = document.getElementById('c-cliente')?.value.trim();
     if (!client) throw new Error('Escribe el nombre del cliente.');
@@ -83,7 +83,7 @@
         notes
       },
       items: quoteItems.map(item => {
-        const service = (Array.isArray(window.catalog) ? window.catalog : [])
+        const service = (typeof catalog !== 'undefined' && Array.isArray(catalog) ? catalog : [])
           .find(row => row.name === item.desc);
         return {
           description: item.desc,
@@ -162,7 +162,6 @@
         if (folioInput) folioInput.value = event.data.folio;
         showStatus((event.data.duplicate ? 'Ya estaba registrada: ' : 'Guardada en CRM: ') + event.data.folio);
         if (button) { button.textContent = 'Registrada · ' + event.data.folio; button.disabled = true; }
-        try { sessionStorage.removeItem(EXT_KEY); } catch (_) {}
       } else {
         showStatus('No se guardó la cotización: ' + (event.data.error || 'revisa el acceso al endpoint.'));
         cleanup();

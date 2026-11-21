@@ -1468,9 +1468,9 @@ function setSelectValue(id, value) {
   if (exists) el.value = value;
 }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
-function fmt(n) { return '$' + Math.round(n).toLocaleString('es-MX'); }
-function fmtN(n) { return '$' + Math.round(n).toLocaleString('es-MX'); }
-function fmtWA(n) { return '$' + Math.round(n).toLocaleString('es-MX'); }
+function fmt(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtN(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtWA(n) { return '$' + Number(n).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
 function showToast(msg) {
   const t = document.getElementById('toast');
